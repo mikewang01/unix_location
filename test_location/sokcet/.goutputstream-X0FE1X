@@ -1,0 +1,17 @@
+CC = gcc
+MIPS-CC = /opt/buildroot-gcc342/bin/mipsel-linux-gcc 
+
+JSON_C_DIR=/usr
+INCFLAGS += -I$(JSON_C_DIR)/include/json-c -I$(JSON_C_DIR)/include/i386-linux-gnu/ -I$(JSON_C_DIR)/include/
+LDFLAGS+= -Wall -pthread -std=c99 -L$(JSON_C_DIR)/lib -ljson 
+SRC = $(wildcard *.c)
+OBJ = e2s
+
+$(OBJ): $(SRC)
+	$(MIPS-CC)  $(INCFLAGS) $(LDFLAGS) -o $@ $^
+
+clean:
+	rm -rf *~ *.o server e2s SOURCEINSIGHT
+	
+server:	$(SRC)
+	$(CC) $(INCFLAGS) $(LDFLAGS) -o $@  $(SRC)

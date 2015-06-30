@@ -1,0 +1,20 @@
+CC = gcc
+MIPS-CC = /opt/buildroot-gcc342/bin/mipsel-linux-gcc 
+
+JSON_C_DIR=/user
+
+FLAGS += -I/usr/include/json 
+LDFLAGS+= -Wall -pthread -L/user/lib -ljson 
+
+SRC = $(wildcard *.c)
+OBJ = e2s
+
+$(OBJ): $(SRC)
+	$(MIPS-CC)  $(FLAGS) $(LDFLAGS) -o $@ $^
+
+clean:
+	rm -rf *~ *.o server e2s SOURCEINSIGHT
+	
+server:	$(SRC)
+#gcc -o json-demo $(FLAGS) test1.c -std=c99 $(LDFLAGS)
+	$(CC) $(FLAGS) $(LDFLAGS) -o $@  $(SRC)
