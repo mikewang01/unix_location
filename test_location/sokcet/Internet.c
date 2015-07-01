@@ -101,6 +101,7 @@ int  socket_process(void* env)
 
             int flag = fcntl(sock_fd, F_GETFL);
             int w_fd;
+			
             if(flag < 0) {
                 perror("flag get error\r\n");
             }
@@ -204,7 +205,7 @@ F_FAILED:
 void* thread_socket(void* env)
 {
     int a =0;
-    int msg_len, g_msg_queue_id =  *((int*)env);
+    int msg_len;// g_msg_queue_id =  *((int*)env);
     struct s_msg msg;
 	
     printf("pthread_socket = %d", a++);
@@ -212,7 +213,7 @@ void* thread_socket(void* env)
         fprintf(stdout,"pthread_socket = %d\r\n", a++);
         //socket_process(NULL);
         sleep(1);
-        msg_len = msgrcv(g_msg_queue_id, &msg, sizeof(msg.mtext), 0, IPC_NOWAIT);
+        //msg_len = msgrcv(g_msg_queue_id, &msg, sizeof(msg.mtext), 0, IPC_NOWAIT);
         if(msg_len < 0) {
             perror("no data existed,d error number");
         } else {

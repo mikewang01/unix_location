@@ -65,7 +65,7 @@ typedef struct sgttyb sgttyb;
 #define B4800 12
 #define B9600 13
 #define B19200 14
-#define B38400 15
+#define B38400 15 
 #define TANDEM 0x00000001
 #define CBREAK 0x00000002
 #define LCASE 0x00000004
