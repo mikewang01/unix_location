@@ -213,14 +213,11 @@ void* thread_socket(void* env)
         fprintf(stdout,"pthread_socket = %d\r\n", a++);
         //socket_process(NULL);
         sleep(1);
-        //msg_len = msgrcv(g_msg_queue_id, &msg, sizeof(msg.mtext), 0, IPC_NOWAIT);
-        if(msg_len < 0) {
-            perror("no data existed,d error number");
-        } else {
-            printf("received data = %s, type = %d, lenth = %d\r\n", msg.mtext, msg.type, msg_len);
-        }
-    }
+       
     pthread_exit(NULL);
+	}
 }
+
+
 
 

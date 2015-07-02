@@ -149,7 +149,8 @@ int set_serial_port_ctrl_flag(int fd,int databits,int stopbits,int parity)
         assert(FALSE);
         break;
     }
-
+	/*in case of getting rid of contrlling flag*/
+	options.c_iflag &= ~(ICRNL | IXON);
     //set stop bits
     switch (stopbits) {
     case 1:
@@ -373,7 +374,7 @@ void serial_test()
 
 
 }
-
+#if 0
 void *serial_thread(void *arg)
 {
     int fd, nread, count, result ,iread;
@@ -427,6 +428,7 @@ void *serial_thread(void *arg)
 
     }
 }
+#endif
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

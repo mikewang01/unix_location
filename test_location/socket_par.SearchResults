@@ -1,8 +1,6 @@
----- struct addrinfo Matches (7 in 1 files) ----
-Netdb.h (include):struct addrinfo
-Netdb.h (include):  struct addrinfo *ai_next;	/* Pointer to next in list.  */
-Netdb.h (include):  const struct addrinfo *ar_request; /* Additional request specification.  */
-Netdb.h (include):  struct addrinfo *ar_result;	/* Pointer to result.  */
-Netdb.h (include):			__const struct addrinfo *__restrict __req,
-Netdb.h (include):			struct addrinfo **__restrict __pai);
-Netdb.h (include):extern void freeaddrinfo (struct addrinfo *__ai) __THROW;
+---- uart_send_timer Matches (5 in 0 files) ----
+Cling_uart_mac.c (sokcet)://static os_timer_t  uart_send_timer;
+Cling_uart_mac.c (sokcet):		os_timer_disarm(&(uart_send_timer));
+Cling_uart_mac.c (sokcet):		os_timer_setfn(&(uart_send_timer), (os_timer_func_t *)mac_sendlist_mantain_demon, 0);
+Cling_uart_mac.c (sokcet):		os_timer_arm(&(uart_send_timer), CLING_TX_UART_FIFO_POLL_PERIOAD, 0);
+Cling_uart_mac.c (sokcet):			os_timer_arm(&(uart_send_timer), CLING_TX_UART_FIFO_POLL_PERIOAD, 0);
