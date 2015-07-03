@@ -22,6 +22,14 @@
 #include<thread_db.h>
 #include "internet.h"
 #include "json_test.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <stddef.h>
+#include <string.h>
+#include <assert.h>
+#include <json.h>
+#include <json_tokener.h>
+
 /*********************************************************************
 * MACROS
 */
@@ -52,6 +60,25 @@
 *******************************************************************************/
 int init_json_interface (CLASS(json_interface) *arg) /*initiate http object*/
 {
+	
+	json_tokener *tok;
+	json_object *my_string, *my_int, *my_object, *my_array;
+	json_object *new_obj;
+	int i;
+	 MC_SET_DEBUG(1);
+	my_string = json_object_new_string("mike");
+	printf("my_string=%s\n", json_object_get_string(my_string));
+	printf("my_string.to_string()=%s\n", json_object_to_json_string(my_string));
+	//json_object_put(my_string);
+
+	my_object =  json_object_new_object();
+  	json_object_object_add(my_object, "name", my_string);
+	json_object_object_add(my_object, "age", json_object_new_int(32));
+	printf("my_object.to_string()=%s\n", json_object_to_json_string(my_object));
+
+ 
+	 
+	//MC_SET_DEBUG(1);
 	
 
 }

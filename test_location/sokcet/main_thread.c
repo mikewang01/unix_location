@@ -34,6 +34,7 @@
 #include <sys/select.h>
 #include <curses.h>
 #include "serial_port.h"
+#include "json_test.h"
 /*********************************************************************
 * MACROS
 */
@@ -77,7 +78,11 @@ static void *(*pthread_arry[])(void *)= {
 *******************************************************************************/
 
 
-
+int init_json_interface (CLASS(json_interface) *arg); /*initiate http object*/
+int HmacEncode(const char * algo,
+                const char * key, unsigned int key_length,
+                const char * input, unsigned int input_length,
+                unsigned char * output, unsigned int *output_length);
 
 int main()
 {
@@ -88,14 +93,28 @@ int main()
     struct s_msg in_msg_test;
     int serial_pipe_read, serial_pipe_write;
     int socket_pipe_read, socket_pipe_write;
+	#define KEY  "5EHdd8_334dyUjjddleqH6YHHm"
+	#define TEXT "v1.0.2t45772(a)18:fe:34:9b:b4:85{\"action\":\"time\"}1429269133&blue=CLING E35931:32:33:34:35:36"
+
+	char pbuffer[100];
+	int  output_len;
+	
+	HmacEncode("sha1", KEY, strlen(KEY), TEXT, strlen(TEXT),pbuffer, &output_len);
+	printf("output lenth = %d\n", output_len);
+	for(int i=0; i< output_len; i++){
+		printf("0x%02x ", pbuffer[i]);
+
+	}
+	
     //json_test1();
     //serial_test();
     printf("main thread\r\n");
+	init_json_interface (NULL); /*initiate http object*/
     for (int i = 1; i < MAX_COM+1 ; i++) {
         int pipe_fd[4];
         struct private_thread_para *t;
         /*created data parameter passed to child thread*/
-        if ((pipe(pipe_fd) >= 0) && (pipe(&pipe_fd[2] >= 0))) {
+        if ((pipe(pipe_fd) >= 0) && ((pipe(&pipe_fd[2])) >= 0)) {
             if((t = malloc(sizeof(struct private_thread_para))) == NULL) {
                 return -1;
             }
@@ -126,42 +145,48 @@ int main()
     fd_set inputs;
     FD_ZERO(&inputs);
     FD_SET(serial_pipe_read, &inputs);
+
     int nread,result;
     char buffer[100];
+    struct timeval temp;
+    temp.tv_sec = 10;
 
-	struct timeval temp;
-	temp.tv_sec = 10;
+	
     for(;;) {
-       //perror("com select timeout(((((((((\r\n");
-		FD_ZERO(&inputs);
+        //perror("com select timeout(((((((((\r\n");
+        FD_ZERO(&inputs);
         FD_SET(serial_pipe_read, &inputs);
         result = select(serial_pipe_read + 1, &inputs, NULL , (fd_set *)NULL, &temp);
 #if 1
 
         switch(result) {
         case 0: //time out
-        	temp.tv_sec = 10;
+            temp.tv_sec = 10;
             FD_ZERO(&inputs);
             FD_SET(serial_pipe_read, &inputs);
-            perror("com select timeout\r\n");
+            perror("main thread wait timeout\r\n");
+			write(serial_pipe_write, "12345", 5);
             break;
         case -1:		 //error
             perror("com select timeout\r\n");
             //return result;
         default:
 #if 1
-
             if(FD_ISSET(serial_pipe_read, &inputs)) {
                 ioctl(serial_pipe_read, FIONREAD, &nread);
-                   if(nread == 0) {
-                		continue;
-                   }
+                if(nread == 0) {
+                    continue;
+                }
                 nread = read(serial_pipe_read, buffer, nread);
                 printf("main thread pipe read lenth =%d\n", nread);
+				
                 for(int i=0; i < nread ; i++) {
-					// printf("main thread pipe read le\n")
+                    // printf("main thread pipe read le\n")
                     fprintf(stdout,"=%02x", buffer[i]);
                 }
+
+                /*write data to serial thread through pipe*/
+                write(serial_pipe_write, "12345", 5);
 
             }
 
@@ -174,6 +199,9 @@ int main()
 #endif
     }
 #endif
+
+
+	printf("serial_pipe_write = %d", serial_pipe_write);
     char a[]="01234567891";
     for(;;) {
         write(serial_pipe_write,a,sizeof(a));

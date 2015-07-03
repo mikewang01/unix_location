@@ -24,6 +24,16 @@
 #include "internet.h"
 #include "serial_port.h"
 #include "config.h"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <termios.h>
+#include <errno.h>
+#include <sys/ioctl.h>
+#include <assert.h>
+#include <sys/select.h>
+#include <curses.h>
+#include "serial_port.h"
 /*********************************************************************
 * MACROS
 */
@@ -117,15 +127,20 @@ int main()
     FD_ZERO(&inputs);
     FD_SET(serial_pipe_read, &inputs);
     int nread,result;
-	char buffer[100];
-    for(;;) {
-        perror("com select timeout(((((((((\r\n");
+    char buffer[100];
 
-        result = select(serial_pipe_read + 1, &inputs, NULL , (fd_set *)NULL, NULL);
+	struct timeval temp;
+	temp.tv_sec = 10;
+    for(;;) {
+       //perror("com select timeout(((((((((\r\n");
+		FD_ZERO(&inputs);
+        FD_SET(serial_pipe_read, &inputs);
+        result = select(serial_pipe_read + 1, &inputs, NULL , (fd_set *)NULL, &temp);
 #if 1
 
         switch(result) {
         case 0: //time out
+        	temp.tv_sec = 10;
             FD_ZERO(&inputs);
             FD_SET(serial_pipe_read, &inputs);
             perror("com select timeout\r\n");
@@ -134,25 +149,31 @@ int main()
             perror("com select timeout\r\n");
             //return result;
         default: 
- #if 1
+#if 1
 
             if(FD_ISSET(serial_pipe_read, &inputs)) {
-                //ioctl(fd, FIONREAD, &iread);
-                //   if(iread == 0) {
-                //		continue;
-                //   }
-               nread = read(serial_pipe_read, buffer, sizeof(buffer));
-                printf("main thread pipe read\n");
+                ioctl(serial_pipe_read, FIONREAD, &nread);
+                   if(nread == 0) {
+                		continue;
+                   }
+                nread = read(serial_pipe_read, buffer, nread);
+                printf("main thread pipe read lenth =%d\n", nread);
+
+				
                 for(int i=0; i < nread ; i++) {
-                   printf(".%d", buffer[i]);
+					// printf("main thread pipe read le\n")
+                    fprintf(stdout,"=%02x", buffer[i]);
                 }
+
+				/*write data to serial thread through pipe*/
+				write(serial_pipe_write, "12345", 5);
 
             }
 
             //buffer[nread] = 0;
             //printf("%s\r\n", buffer);
 #endif
-			break;
+            break;
         }//end of switch
 
 #endif

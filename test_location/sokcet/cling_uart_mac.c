@@ -36,7 +36,7 @@
 
 #define  MAC_SEND_BUFFER(__X, __Y) do{\
 	if(reg_serial_fd > 0){\
-		write(reg_serial_fd,__X,__Y);\
+		write(reg_serial_fd, __X,__Y);\
 	}\
 }while(0)
 
@@ -103,7 +103,6 @@ static SEMAPHORE send_fifo_semphore = UNLOCKED;
 static int macsend_ack_recieved();
 static int send_package_assemble(struct mac_layer_payload_send *payload_temp, enum package_type type);
 static int add_payload2revlist(unsigned char *pbuffer, int size);
-static int mac_sendlist_mantain_demon();
 void received_data_process(RcvMsgBuff *para);
 
 
@@ -283,7 +282,6 @@ void received_data_process(RcvMsgBuff *para)
     	if (cmd_recieved_callback != NULL) {
 			cmd_recieved_callback(para->pRcvMsgBuff[1]);
 		}
-		
 		/*for the real time purpose, call back function is prefered*/
 		/*after receieving ,ssend back ack package*/
         send_package_assemble(NULL, PACKAGE_ACK);
@@ -298,7 +296,6 @@ void received_data_process(RcvMsgBuff *para)
  * Returns      : none
 *******************************************************************************/
 int	cling_data_mac_pocess(void * buffer, int lenth);
-
 static int add_payload2revlist(unsigned char *pbuffer, int size)
 {
 
@@ -451,7 +448,7 @@ FAILED:
  * Parameters   : struct mac_layer_payload_rev *ppayload: mac layer layload pointer
  * Returns      : none
 *******************************************************************************/
-static int mac_sendlist_mantain_demon()
+int mac_sendlist_mantain_demon()
 {
 
     struct mac_layer_payload_send *payload_temp = send_package_list_header;
@@ -524,8 +521,6 @@ FAILED:
     /*leave criticla section ,release semphore here*/
     UNLOCK_SEMAPHORE(send_fifo_semphore);
     return FALSE;
-
-
 }
 
 /******************************************************************************
@@ -546,7 +541,7 @@ static int macsend_ack_recieved()
         if (payload_temp->state == PACKAGE_WAITING_FOR_ACK) {
             /*clent has revieced the package successfully */
             payload_temp->state = PACKAGE_SENDDED_SUCCESSFULLY;
-			//mac_sendlist_mantain_demon();
+			mac_sendlist_mantain_demon();
         }
     }
 

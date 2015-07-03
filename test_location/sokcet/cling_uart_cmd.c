@@ -302,7 +302,7 @@ int  cling_data_mac_pocess(void * buffer, int lenth)
  * Parameters   : none
  * Returns      : none
 *******************************************************************************/
-#if 1
+#if 0
 
 static int  cling_data_send(CLASS(cling_uart) *arg, char *pinf, int lenth)
 {
@@ -312,6 +312,22 @@ static int  cling_data_send(CLASS(cling_uart) *arg, char *pinf, int lenth)
     struct cling_uart_private_data *private_data = (struct cling_uart_private_data*)(arg->user_data);
     assert(private_data);
 
+    mac_send_payload((char*)pinf, lenth);
+
+}
+#endif
+/******************************************************************************
+ * FunctionName : cling_data_send
+ * Description  : uart received poll implementation to get cling imformation
+ * Parameters   : none
+ * Returns      : none
+*******************************************************************************/
+#if 1
+
+int  cling_u_data_send(char *pinf, int lenth)
+{
+
+   
     mac_send_payload((char*)pinf, lenth);
 
 }

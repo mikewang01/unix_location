@@ -39,6 +39,8 @@ END_DEF_CLASS(uart_implement)
 int obtain_payload_from_revlist(struct mac_layer_payload_rev **ppayload);
 int mac_send_payload(char *ppayload, int lenth);
 void set_recieved_cmd_call_back(void (*callback)(char));
+/*maintain serial send list*/
+int mac_sendlist_mantain_demon();
 
 
 #endif

@@ -347,8 +347,9 @@ FAILED:
     return -1;
 }
 
-#define TEST_STRING "HELLO CLING"
 
+
+#define TEST_STRING "HELLO CLING"
 void serial_test()
 {
 

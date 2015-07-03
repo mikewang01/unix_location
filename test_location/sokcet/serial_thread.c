@@ -34,7 +34,7 @@ extern "C" {
 /*********************************************************************
 * TYPEDEFS
 */
-
+#define SERIAL_SELECT_TIMEOUT 100	//unit as ms
 
 /*********************************************************************
 * GLOBAL VARIABLES
@@ -60,8 +60,8 @@ void *serial_thread(void *arg)
 
 	
 	printf("serial_thread running\r\n");
-	serial_timeout.tv_sec = 1;
-	serial_timeout.tv_usec = 0;
+	serial_timeout.tv_sec = SERIAL_SELECT_TIMEOUT/1000;
+	serial_timeout.tv_usec = (SERIAL_SELECT_TIMEOUT%1000)*1000;
 	
 	if((fd = serial_init(0)) < 0) {
         perror("serial init failed\r\n");
@@ -79,7 +79,7 @@ void *serial_thread(void *arg)
 	FD_SET(serial_para->pipe_child_thread->pipe_read_fd, &inputs);
 	FD_ZERO(&outputs);
     FD_SET(serial_para->fd, &outputs);
-	FD_SET(serial_para->pipe_father_thread->pipe_write_fd, &inputs);
+	FD_SET(serial_para->pipe_father_thread->pipe_write_fd, &outputs);
 
 	/*mac layer serial device fd*/
 	register_serial_fd(fd);
@@ -92,9 +92,12 @@ void *serial_thread(void *arg)
         case 0: //time out
         	FD_ZERO(&inputs);
     		FD_SET(fd, &inputs);
-        	serial_timeout.tv_sec = 10;
-			serial_timeout.tv_usec = 0;
-        	perror("com select timeout\r\n");
+			FD_SET(serial_para->pipe_child_thread->pipe_read_fd, &inputs);
+        	serial_timeout.tv_sec = SERIAL_SELECT_TIMEOUT/1000;
+			serial_timeout.tv_usec = (SERIAL_SELECT_TIMEOUT%1000)*1000;
+			//printf("mac_sendlist_mantain_demon\r\n");
+	 		mac_sendlist_mantain_demon();
+        	//perror("serial select timeout\r\n");
 			break;
         case -1:		 //error
             return result;
@@ -104,17 +107,20 @@ void *serial_thread(void *arg)
                 if(iread == 0) {
 					continue;
                 }
-                nread = read(fd, buffer, sizeof(buffer));
-
+                nread = read(serial_para->fd, buffer, sizeof(buffer));
+				
 				for(int i = 0; i < nread; i++){
 					receive_one_char_callback(buffer[i]);
 				}
 				//buffer[nread] = 0;
 				//printf("%s\r\n", buffer);
-            }else if(FD_ISSET(serial_para->pipe_child_thread->pipe_read_fd,&inputs)){/*this meeans serial buffer is writravke*/
-				nread = read(fd, buffer, sizeof(buffer));
+            }else if(FD_ISSET(serial_para->pipe_child_thread->pipe_read_fd, &inputs)){
+            	/*this meeans serial buffer is writravke*/
+				nread = read(serial_para->pipe_child_thread->pipe_read_fd, buffer, sizeof(buffer));
 				buffer[nread] = 0;
 				printf("%s\r\n", buffer);
+				printf("serial data recieved\r\n");
+	 			cling_u_data_send(buffer, nread);
 			}else {
                 assert(FALSE);
             }

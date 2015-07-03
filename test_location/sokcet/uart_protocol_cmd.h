@@ -101,6 +101,7 @@ DEF_CLASS(cling_uart)
 	void *user_data;/*point to user private data*/
 END_DEF_CLASS(cling_uart)
 
+int  cling_u_data_send(char *pinf, int lenth);
 
 
 
