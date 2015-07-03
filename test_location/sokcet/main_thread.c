@@ -165,7 +165,7 @@ int main()
             FD_ZERO(&inputs);
             FD_SET(serial_pipe_read, &inputs);
             perror("main thread wait timeout\r\n");
-			write(serial_pipe_write, "12345", 5);
+			//write(serial_pipe_write, "12345", 5);
             break;
         case -1:		 //error
             perror("com select timeout\r\n");

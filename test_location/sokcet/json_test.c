@@ -75,11 +75,8 @@ int init_json_interface (CLASS(json_interface) *arg) /*initiate http object*/
   	json_object_object_add(my_object, "name", my_string);
 	json_object_object_add(my_object, "age", json_object_new_int(32));
 	printf("my_object.to_string()=%s\n", json_object_to_json_string(my_object));
-
- 
-	 
+		 
 	//MC_SET_DEBUG(1);
-	
 
 }
 
