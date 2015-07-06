@@ -92,7 +92,7 @@ int json_test1()
   json_object_object_add(my_object, "bool1", json_object_new_boolean(1));
   json_object_object_add(my_object, "baz", json_object_new_string("bang"));
   json_object_object_add(my_object, "baz", json_object_new_string("fark"));
-  json_object_object_del(my_object, "baz");
+  //json_object_object_del(my_object, "baz");
   /*json_object_object_add(my_object, "arr", my_array);*/
   printf("my_object=\n");
   json_object_object_foreach(my_object, key, val) {

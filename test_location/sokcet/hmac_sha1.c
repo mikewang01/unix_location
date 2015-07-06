@@ -17,6 +17,9 @@
 #include <openssl/hmac.h>
 #include <string.h>
 #include "curses.h"
+#include <openssl/evp.h>
+#include <openssl/buffer.h>
+
 /*********************************************************************
 * MACROS
 */
@@ -72,14 +75,14 @@ static int hmac_sha1_process_internal(unsigned char *text, int text_len, unsigne
 static int hmac_sha1_process  (CLASS(hmac_sha1) *arg, char *output_buffer, int *size);
 
 static int hmac_sha1_base64_decode(CLASS(hmac_sha1) *arg, char *src, char *dst);
-static int hmac_sha1_base64_encode(CLASS(hmac_sha1) *arg, const char *src, int src_size, char *dst);
+static int hmac_sha1_base64_encode(CLASS(hmac_sha1) *arg, const char *str, int str_len, char *encode, int encode_lenth);
 
 
 static int delete_hmac_sha1(CLASS(hmac_sha1) *arg);
 
 /******************************************************************************
- * FunctionName : init_hmac_sha1
- * Description	: internal used to initiate object 
+ * FunctionName : HmacEncode
+ * Description	:  use openssl lib to encode txt by specific algrithem choosed by algp
  * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
  *					
  * Returns		: TRUE   : initialzie successfully
@@ -90,10 +93,19 @@ int HmacEncode(const char * algo,
                 const char * input, unsigned int input_length,
                 unsigned char * output, unsigned int *output_length) {
         const EVP_MD * engine = NULL;
-		/*ifoutput buffer is less than lowest threahold*/
-		if(sizeof(output) < EVP_MAX_MD_SIZE){
+
+		assert(output != NULL);
+
+		
+		if(output == NULL){
 			return -1;
 		}
+		/*
+		ifoutput buffer is less than lowest threahold
+		if(sizeof(output) < EVP_MAX_MD_SIZE){
+			printf("sizeof(output) < EVP_MAX_MD_SIZE\n");
+			return -1;
+		}*/
         if(strcasecmp("sha512", algo) == 0) {
                 engine = EVP_sha512();
         }
@@ -116,7 +128,7 @@ int HmacEncode(const char * algo,
                 engine = EVP_sha();
         }
         else if(strcasecmp("md2", algo) == 0) {
-                engine = EVP_md2();
+               // engine = EVP_md2();
         }
         else {
 				printf("Algorithm %s is not supported by this program!", algo);
@@ -143,6 +155,20 @@ int HmacEncode(const char * algo,
  * Description	: internal used to initiate object 
  * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
  *					
+ * Returns		: >=0   : operate successfully
+ *				  -1    : error code 	
+*******************************************************************************/
+static int sha1_process_full(CLASS(hmac_sha1)*arg,  const char * key, unsigned int key_length,
+                const char * input, unsigned int input_length,
+                unsigned char * output, unsigned int *output_length){
+	return HmacEncode("sha1", key, key_length, input, input_length, output, output_length);
+}
+
+/******************************************************************************
+ * FunctionName : init_hmac_sha1
+ * Description	: internal used to initiate object 
+ * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
+ *					
  * Returns		: TRUE   : initialzie successfully
  *				  FALSE  : initilize failedly 	
 *******************************************************************************/
@@ -152,7 +178,8 @@ init_hmac_sha1(CLASS(hmac_sha1) *arg)
 {
 
 	assert(arg != NULL);
-	
+	arg->process_full = sha1_process_full;
+	arg->base64_encode = hmac_sha1_base64_encode;
 	return TRUE;
 }
 #endif
@@ -331,7 +358,19 @@ hmac_sha1_base64_decode(CLASS(hmac_sha1) *arg, char *src, char *dst)
     *p=0;
     free(q);
 }
-
+#if 0
+static int base64_decode(char *str,int str_len,char *decode,int decode_buffer_len){
+    int len=0;
+    BIO *b64,*bmem;
+    b64=BIO_new(BIO_f_base64());
+    bmem=BIO_new_mem_buf(str,str_len);
+    bmem=BIO_push(b64,bmem);
+    len=BIO_read(bmem,decode,str_len);
+    decode[len]=0;
+    BIO_free_all(bmem);
+    return 0;
+}
+#endif
 /******************************************************************************
  * FunctionName : base64_encode
  * Description  : user interface to encode data
@@ -343,36 +382,30 @@ hmac_sha1_base64_decode(CLASS(hmac_sha1) *arg, char *src, char *dst)
  * Returns      : NONE
 *******************************************************************************/
 static int 
-hmac_sha1_base64_encode(CLASS(hmac_sha1) *arg, const char *src, int src_size, char *dst)
+hmac_sha1_base64_encode(CLASS(hmac_sha1) *arg, const char *str, int str_len, char *encode, 	int encode_len)
 {
-    int i = 0;
-    char *p = dst;
-    int d = src_size-3;
-    //for(i=0;i<strlen(src)-3;i+=3) ;if (strlen(src)-3)<0 there is a buf
-	
-    for(i=0;i<=d;i+=3)
-    {
-        *p++=Base64[((*(src+i))>>2)&0x3f];
-        *p++=Base64[(((*(src+i))&0x3)<<4)+((*(src+i+1))>>4)];
-        *p++=Base64[((*(src+i+1)&0xf)<<2)+((*(src+i+2))>>6)];
-        *p++=Base64[(*(src+i+2))&0x3f];
-    }
-    if((src_size - i) == 1)
-    {
-        *p++=Base64[((*(src+i))>>2)&0x3f];
-        *p++=Base64[((*(src+i))&0x3)<<4];
-        *p++='=';
-        *p++='=';
-    }
-    if((src_size - i) == 2)
-    {
-        *p++=Base64[((*(src+i))>>2)&0x3f];
-        *p++=Base64[(((*(src+i))&0x3)<<4)+((*(src+i+1))>>4)];
-        *p++=Base64[((*(src+i+1)&0xf)<<2)];
-        *p++='=';
-    }
-    *p='\0';
+    BIO *bmem,*b64;
+    BUF_MEM *bptr;
+    b64=BIO_new(BIO_f_base64());
+    bmem=BIO_new(BIO_s_mem());
+    b64=BIO_push(b64,bmem);
+    BIO_write(b64,str,str_len); //encode
+    BIO_flush(b64);
+    BIO_get_mem_ptr(b64,&bptr);
+    if(bptr->length>encode_len){
+        printf("encode_len too small\n");
+        return -1; 
+    }   
+    encode_len=bptr->length;
+    memcpy(encode,bptr->data,bptr->length);
+//  write(1,encode,bptr->length);
+    BIO_free_all(b64);
+	encode[encode_len-1] = 0;
+    return encode_len;
 }
+
+
+
 
 
 

@@ -35,6 +35,9 @@
 #include <curses.h>
 #include "serial_port.h"
 #include "json_test.h"
+#include "pthread.h"
+#include "int_compnent.h"
+#include "json_test.h"
 /*********************************************************************
 * MACROS
 */
@@ -46,6 +49,10 @@
 /*********************************************************************
 * TYPEDEFS
 */
+struct process_property{
+	pthread_mutex_t property_mutex; /*used to protect  process property*/
+	char mac_adress[30];
+} ;
 
 
 /*********************************************************************
@@ -56,6 +63,7 @@
 int json_test1(void);
 void serial_test(void);
 void *serial_thread(void *arg);
+static CLASS(json_interface) *json_obj;
 
 
 /*********************************************************************
@@ -77,6 +85,7 @@ static void *(*pthread_arry[])(void *)= {
  * Returns      : none
 *******************************************************************************/
 
+int get_mac(CLASS(int_comp) *arg, char *buffer, char *output_lenth); /*initiate http object*/
 
 int init_json_interface (CLASS(json_interface) *arg); /*initiate http object*/
 int HmacEncode(const char * algo,
@@ -90,26 +99,36 @@ int main()
     thread_t pid[MAX_COM];
     thread_t serid[MAX_COM];
     key_t key;
+	char pbuffer[1024];
     struct s_msg in_msg_test;
     int serial_pipe_read, serial_pipe_write;
     int socket_pipe_read, socket_pipe_write;
+	//get_mac(NULL, NULL, NULL);
+	json_test1();
+	NEW(json_obj,json_interface);
+	json_obj->get_time_request_json(json_obj, pbuffer);
+#if 0
 	#define KEY  "5EHdd8_334dyUjjddleqH6YHHm"
 	#define TEXT "v1.0.2t45772(a)18:fe:34:9b:b4:85{\"action\":\"time\"}1429269133&blue=CLING E35931:32:33:34:35:36"
 
-	char pbuffer[100];
-	int  output_len;
+	int  output_len=0;
 	
 	HmacEncode("sha1", KEY, strlen(KEY), TEXT, strlen(TEXT),pbuffer, &output_len);
-	printf("output lenth = %d\n", output_len);
+	printf("output lenth = %d\n\r", output_len);
+	
 	for(int i=0; i< output_len; i++){
+		//printf("output data = %d\n\r", i);
 		printf("0x%02x ", pbuffer[i]);
 
 	}
-	
-    //json_test1();
+	printf("output finished\n");
+#endif
+	//init_json_interface (NULL); /*initiate http object*/
+	while(1);
+    //json_test1(); 
     //serial_test();
     printf("main thread\r\n");
-	init_json_interface (NULL); /*initiate http object*/
+	
     for (int i = 1; i < MAX_COM+1 ; i++) {
         int pipe_fd[4];
         struct private_thread_para *t;

@@ -11,16 +11,15 @@
 #ifndef __JSON_TEST_H__
 #define __JSON_TEST_H__
 #include "oop_hal.h"
-
+#include "int_compnent.h"
+#include "hmac_sha1.h"
 DEF_CLASS(json_interface)
+	/*extended interface*/
+	CLASS(int_comp)  *internet_interface;
+	/*extended sha1 interface*/
+	CLASS(hmac_sha1) *sha1_interface;
 	int (*init)    	(CLASS(json_interface)*); /*initiate http object*/
-	int (*register_upgrade_startup_callback)(CLASS(json_interface)*, void (*upgrade_startup_callback)());
-	int (*register_upgrade_finish_callback)(CLASS(json_interface)*, void (*upgrade_callback)());
-	int (*de_init) 	(CLASS(json_interface)*);/*delete http object*/
-	int (*config)		(CLASS(json_interface)*, const char*, const char*);/*delete  http object*/
-	int (*disconnect)	(CLASS(json_interface)*);/*disconnect from server*/
-	int (*config_server)	(CLASS(json_interface)*, void*);/*start update fw from serverr*/
-	int (*update_start)	(CLASS(json_interface)*, void*);/*start update fw from serverr*/
+	int (*get_time_request_json) (CLASS(json_interface) *arg, char *pbuffer);
 	int (*set_user_flow)	(CLASS(json_interface)*, int (*pfunc)(char*, size_t));/*start update fw from serverr*/ 
 	void *user_data;/*point to user private data*/
 END_DEF_CLASS(json_interface)

@@ -1,6 +1,17 @@
----- uart_send_timer Matches (5 in 0 files) ----
-Cling_uart_mac.c (sokcet)://static os_timer_t  uart_send_timer;
-Cling_uart_mac.c (sokcet):		os_timer_disarm(&(uart_send_timer));
-Cling_uart_mac.c (sokcet):		os_timer_setfn(&(uart_send_timer), (os_timer_func_t *)mac_sendlist_mantain_demon, 0);
-Cling_uart_mac.c (sokcet):		os_timer_arm(&(uart_send_timer), CLING_TX_UART_FIFO_POLL_PERIOAD, 0);
-Cling_uart_mac.c (sokcet):			os_timer_arm(&(uart_send_timer), CLING_TX_UART_FIFO_POLL_PERIOAD, 0);
+---- set Matches (18 in 0 files) ----
+Json_object.h (include\json-c): * Type of custom user delete functions.  See json_object_set_serializer.
+Json_object.h (include\json-c): * Type of a custom serialization function.  See json_object_set_serializer.
+Json_object.h (include\json-c): * If a custom serializer is already set on this object, any existing 
+Json_object.h (include\json-c): * user_delete function is called before the new one is set.
+Json_object.h (include\json-c): * and the default behaviour is reset.
+Json_object.h (include\json-c):extern void json_object_set_serializer(json_object *jso,
+Json_object.h (include\json-c): * Can be used with json_object_set_serializer().
+Json_object.h (include\json-c): * Can be used with json_object_set_serializer().
+Json_object.h (include\json-c): * and errno is set to EINVAL. null is equivalent to 0 (no error values set)
+Json_object.h (include\json-c): *   json_object_set_serializer(d, json_object_userdata_to_json_string,
+Json_object.h (include\json-c): * errno is set to EINVAL. null is equivalent to 0 (no error values set)
+Json_object.h (include\json-c): * If the value is too big to fit in a double, then the value is set to
+Json_object.h (include\json-c): * the closest infinity with errno set to ERANGE. If strings cannot be
+Json_object.h (include\json-c): * converted to their double value, then EINVAL is set & NaN is returned.
+Json_object.h (include\json-c): * Arrays of length 0 are interpreted as 0 (with no error flags set).
+Json_object.h (include\json-c): * converted using the above rules.  All other arrays set the error to

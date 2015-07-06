@@ -20,9 +20,9 @@
 /*implement the function of new in c++*/
 #define NEW(__CLASSP, __NAME) \
 	do{\
-		__CLASSP = (CLASS(__NAME)*)os_malloc(sizeof(CLASS(__NAME)));\
-		if (init_##__NAME(__CLASSP) == FALSE){\
-			os_free(__CLASSP);\
+		__CLASSP = (CLASS(__NAME)*)malloc(sizeof(CLASS(__NAME)));\
+		if (init_##__NAME(__CLASSP) < 0){\
+			free(__CLASSP);\
 		}\
 	 }\
 	while(0)

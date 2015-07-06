@@ -21,13 +21,14 @@ CLASS(hmac_sha1)
 #else
 
 DEF_CLASS(hmac_sha1)
-	int (*init)    (CLASS(hmac_sha1) *arg);
-	int (*de_init) (CLASS(hmac_sha1) *arg);
- 	int (*set_key) (CLASS(hmac_sha1) *arg, char *key, int size);
- 	int (*set_text)(CLASS(hmac_sha1) *arg, char *text, int size);
-	int (*process) (CLASS(hmac_sha1) *arg, char *output_buffer, int *size);
-	int (*base64_encode) (CLASS(hmac_sha1) *arg, const char *src, int src_size, char *dst);
-	int (*base64_decode) (CLASS(hmac_sha1) *arg, char *src, char *dst);
+	int (*init)    (CLASS(hmac_sha1)*);
+	int (*de_init) (CLASS(hmac_sha1)*);
+ 	int (*set_key) (CLASS(hmac_sha1)*, char*, int );
+ 	int (*set_text)(CLASS(hmac_sha1)*, char*, int );
+	int (*process) (CLASS(hmac_sha1)*, char*, int*);
+	int (*process_full)(CLASS(hmac_sha1)*, const char* , unsigned int ,const char* , unsigned int , unsigned char* , unsigned int*);
+	int (*base64_encode) (CLASS(hmac_sha1)*, const char*, int, char*, int);
+	int (*base64_decode) (CLASS(hmac_sha1)*, char*, char*);
 	void *user_data;
 END_DEF_CLASS(hmac_sha1)
 
