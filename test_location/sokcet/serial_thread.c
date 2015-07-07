@@ -56,8 +56,6 @@ void *serial_thread(void *arg)
 	struct private_thread_para *serial_para = (struct private_thread_para*)(arg);
 
 	unsigned char buffer[100];
-
-
 	
 	printf("serial_thread running\r\n");
 	serial_timeout.tv_sec = SERIAL_SELECT_TIMEOUT/1000;

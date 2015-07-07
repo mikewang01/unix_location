@@ -92,6 +92,7 @@ int HmacEncode(const char * algo,
                 const char * key, unsigned int key_length,
                 const char * input, unsigned int input_length,
                 unsigned char * output, unsigned int *output_length);
+int check_network_status ();
 
 int main()
 {
@@ -105,8 +106,12 @@ int main()
     int socket_pipe_read, socket_pipe_write;
 	//get_mac(NULL, NULL, NULL);
 	json_test1();
+	check_network_status ();
 	NEW(json_obj,json_interface);
-	json_obj->get_time_request_json(json_obj, pbuffer);
+	/*get time syc json sucessfully*/
+	if(json_obj->get_time_request_json(json_obj, pbuffer) == 0){
+		printf("get time syc request json = %s\n", pbuffer);
+	}
 #if 0
 	#define KEY  "5EHdd8_334dyUjjddleqH6YHHm"
 	#define TEXT "v1.0.2t45772(a)18:fe:34:9b:b4:85{\"action\":\"time\"}1429269133&blue=CLING E35931:32:33:34:35:36"
@@ -124,7 +129,7 @@ int main()
 	printf("output finished\n");
 #endif
 	//init_json_interface (NULL); /*initiate http object*/
-	while(1);
+//	while(1);
     //json_test1(); 
     //serial_test();
     printf("main thread\r\n");
@@ -159,7 +164,7 @@ int main()
         //pthread_create(&serid[i], NULL, serial_proc, &server_env);
     }
 
-#if 1
+#if 0
     printf("*********serial_pipe_read id =%d\n",serial_pipe_read );
     fd_set inputs;
     FD_ZERO(&inputs);
@@ -219,11 +224,11 @@ int main()
     }
 #endif
 
-
+//while(1);
 	printf("serial_pipe_write = %d", serial_pipe_write);
     char a[]="01234567891";
     for(;;) {
-        write(serial_pipe_write,a,sizeof(a));
+        write(socket_pipe_write,pbuffer,strlen(pbuffer)+1);
         a[0]++;
         sleep(2);
     }
