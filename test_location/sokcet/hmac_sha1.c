@@ -12,13 +12,15 @@
 /*********************************************************************
  * INCLUDES
 */
-#include "Hmac_sha1.h"	
+#include "hmac_sha1.h"	
 #include "assert.h"
 #include <openssl/hmac.h>
 #include <string.h>
-#include "curses.h"
+//#include "curses.h"
 #include <openssl/evp.h>
 #include <openssl/buffer.h>
+#include <stdio.h>
+#include <stdint.h>
 
 /*********************************************************************
 * MACROS
@@ -79,14 +81,15 @@ static int hmac_sha1_base64_encode(CLASS(hmac_sha1) *arg, const char *str, int s
 
 
 static int delete_hmac_sha1(CLASS(hmac_sha1) *arg);
+static int check_sum(CLASS(hmac_sha1) *arg, unsigned char *addr, int count, uint16_t *pchecksum);
 
 /******************************************************************************
  * FunctionName : HmacEncode
  * Description	:  use openssl lib to encode txt by specific algrithem choosed by algp
  * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
  *					
- * Returns		: TRUE   : initialzie successfully
- *				  FALSE  : initilize failedly 	
+ * Returns		: 0   : initialzie successfully
+ *				  -1  : initilize failedly 	
 *******************************************************************************/
 int HmacEncode(const char * algo,
                 const char * key, unsigned int key_length,
@@ -125,7 +128,7 @@ int HmacEncode(const char * algo,
                 engine = EVP_sha384();
         }
         else if(strcasecmp("sha", algo) == 0) {
-                engine = EVP_sha();
+               // engine = EVP_sha();
         }
         else if(strcasecmp("md2", algo) == 0) {
                // engine = EVP_md2();
@@ -169,8 +172,8 @@ static int sha1_process_full(CLASS(hmac_sha1)*arg,  const char * key, unsigned i
  * Description	: internal used to initiate object 
  * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
  *					
- * Returns		: TRUE   : initialzie successfully
- *				  FALSE  : initilize failedly 	
+ * Returns		: 0   : initialzie successfully
+ *				  -1  : initilize failedly 	
 *******************************************************************************/
 #if 1/*for debugging purpose*/
 int 
@@ -180,7 +183,8 @@ init_hmac_sha1(CLASS(hmac_sha1) *arg)
 	assert(arg != NULL);
 	arg->process_full = sha1_process_full;
 	arg->base64_encode = hmac_sha1_base64_encode;
-	return TRUE;
+	arg->check_sum = check_sum;
+	return 0;
 }
 #endif
 /******************************************************************************
@@ -188,8 +192,8 @@ init_hmac_sha1(CLASS(hmac_sha1) *arg)
  * Description	: internal used to initiate object 
  * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
  *					
- * Returns		: TRUE   : initialzie successfully
- *				  FALSE  : initilize failedly 	
+ * Returns		: 0   : initialzie successfully
+ *				  -1  : initilize failedly 	
 *******************************************************************************/
 #if 1/*for debugging purpose*/
 static int delete_hmac_sha1(CLASS(hmac_sha1) *arg)
@@ -198,22 +202,58 @@ static int delete_hmac_sha1(CLASS(hmac_sha1) *arg)
 	assert(NULL != arg);
 	
 	
-	return TRUE;
+	return 0;
 }
 #endif
+#if 1
 
+/******************************************************************************
+ * FunctionName : check_sum
+ * Description  : check sum to validate data
+ * Parameters   : unsigned char *addr, int count
+ * Returns      : sum
+*******************************************************************************/
+static int check_sum(CLASS(hmac_sha1) *arg, unsigned char *addr, int count, uint16_t *pchecksum)
+{
+    /* Compute Internet Checksum for "count" bytes
+    * beginning at location "addr".
+    */
+    uint32_t checksum = 0;
+    uint32_t sum = 0;
+#if 1
+    while( count > 1 ) {
+        /* This is the inner loop */
+        sum += * ((uint16_t*) addr);
+        addr += 2;
+        count -= 2;
+    }
+
+    /* Add left-over byte, if any */
+    if( count > 0 )
+        sum += * (uint8_t*) addr;
+
+    /* Fold 32-bit sum to 16 bits */
+    while (sum>>16)
+        sum = (sum & 0xffff) + (sum >> 16);
+    checksum = ~sum;
+#endif
+	*pchecksum = (uint16_t)(check_sum);
+    return 0;
+}
+
+#endif
 /******************************************************************************
  * FunctionName : hmac_sha1_set_key
  * Description	: internal used to initiate object 
  * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
  *					
- * Returns		: TRUE   : initialzie successfully
- *				  FALSE  : initilize failedly 	
+ * Returns		: 0   : initialzie successfully
+ *				  -1  : initilize failedly 	
 *******************************************************************************/
 static int hmac_sha1_set_key (CLASS(hmac_sha1) *arg, char *key, int size)
 {
 
-	return TRUE;
+	return 0;
 }
 
 /******************************************************************************
@@ -221,8 +261,8 @@ static int hmac_sha1_set_key (CLASS(hmac_sha1) *arg, char *key, int size)
  * Description	: internal used to move text content from user buffer to internal buffer 
  * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
  *					
- * Returns		: TRUE   : initialzie successfully
- *				  FALSE  : initilize failedly 	
+ * Returns		: 0   : initialzie successfully
+ *				  -1  : initilize failedly 	
 *******************************************************************************/
 #if 1
 static int hmac_sha1_set_text (CLASS(hmac_sha1) *arg, char *text, int size)
@@ -230,7 +270,7 @@ static int hmac_sha1_set_text (CLASS(hmac_sha1) *arg, char *text, int size)
 	/*check parameter object first*/
 	
 
-	return TRUE;
+	return 0;
 }
 #endif
 
@@ -240,8 +280,8 @@ static int hmac_sha1_set_text (CLASS(hmac_sha1) *arg, char *text, int size)
  * Description	: internal used to enpryt text
  * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
  *					
- * Returns		: TRUE   : initialzie successfully
- *				  FALSE  : initilize failedly 	
+ * Returns		: 0   : initialzie successfully
+ *				  -1  : initilize failedly 	
 *******************************************************************************/
 #if 1
 static int hmac_sha1_process  (CLASS(hmac_sha1) *arg, char *output_buffer, int *size)
@@ -255,8 +295,8 @@ static int hmac_sha1_process  (CLASS(hmac_sha1) *arg, char *output_buffer, int *
  * Description	: internal used to enpryt text
  * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
  *					
- * Returns		: TRUE   : initialzie successfully
- *				  FALSE  : initilize failedly 	
+ * Returns		: 0   : initialzie successfully
+ *				  -1  : initilize failedly 	
 *******************************************************************************/
 #if 1
 static int hmac_sha1_translate  (CLASS(hmac_sha1) *arg, const char * key, unsigned int key_length,
@@ -288,7 +328,7 @@ hmac_sha1_process_internal(unsigned char *text, int text_len, unsigned char *key
 
 
 	
-	return TRUE;
+	return 0;
 }
 
 /******************************************************************************
@@ -322,7 +362,7 @@ hmac_sha1_base64_decode(CLASS(hmac_sha1) *arg, char *src, char *dst)
         else
         {
             printf("\n%c:Not a valid base64 string\n",*s);
-            return FALSE;
+            return -1;
         }
         ++s;
         ++temp;
@@ -353,11 +393,14 @@ hmac_sha1_base64_decode(CLASS(hmac_sha1) *arg, char *src, char *dst)
     else 
     {
         printf("Not a valid base64 string\n");
-        return FALSE;
+        return -1;
     }
     *p=0;
     free(q);
+
+return 0;
 }
+
 #if 0
 static int base64_decode(char *str,int str_len,char *decode,int decode_buffer_len){
     int len=0;

@@ -3,6 +3,7 @@
 
 
 #include "oop_hal.h"
+#include <stdint.h>
 
 
 
@@ -29,6 +30,7 @@ DEF_CLASS(hmac_sha1)
 	int (*process_full)(CLASS(hmac_sha1)*, const char* , unsigned int ,const char* , unsigned int , unsigned char* , unsigned int*);
 	int (*base64_encode) (CLASS(hmac_sha1)*, const char*, int, char*, int);
 	int (*base64_decode) (CLASS(hmac_sha1)*, char*, char*);
+	int (*check_sum)(CLASS(hmac_sha1)*, unsigned char *, int , uint16_t *);
 	void *user_data;
 END_DEF_CLASS(hmac_sha1)
 

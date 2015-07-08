@@ -8,10 +8,10 @@
  * Modification history:
  *     2014/3/12, v1.0 create this file.
 *******************************************************************************/
-
-#include<netdb.h>
-#include<errno.h>
-#include<sys/socket.h>
+//#include <net/if.h>
+#include <netdb.h>
+#include <errno.h>
+#include <sys/socket.h>
 #include <sys/ipc.h>
 #include <netinet/in.h>
 #include <sys/types.h>
@@ -19,9 +19,8 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
-#include<fcntl.h>
-#include<thread_db.h>
-#include "internet.h"
+#include <fcntl.h>
+#include <thread_db.h>
 #include <linux/sockios.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -30,13 +29,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <rpc/types.h>
 #include <linux/ethtool.h>
 #include "config.h"
+#include "internet.h"
+#include <string.h>
+
+
 /*********************************************************************
 * MACROS
-*/
-
+*/ //caddr_t
 #define TIME_OUT  1000 //ms
 #define HOST_DOMAIN "www.ibm.com"
 #define HOST_PORT    80
@@ -153,6 +154,7 @@ char *int_state_machine_str[] = {
     "STATE_ETH_CLOSED",
 };
 
+
 int message_exchange_statemachine(char *host_domain, int port, char *p_obuffer, char *p_ibuffer, int lenth)
 {
 
@@ -178,7 +180,7 @@ int message_exchange_statemachine(char *host_domain, int port, char *p_obuffer, 
         struct addrinfo *ailist, *aip;
         struct addrinfo  hint;
         int err, n;
-        __bzero(&hint, sizeof(struct addrinfo));
+        bzero(&hint, sizeof(struct addrinfo));
         hint.ai_family = AF_INET;
         hint.ai_socktype= SOCK_STREAM;
         hint.ai_canonname = NULL;
@@ -359,7 +361,7 @@ int  socket_process(void* env)
     struct addrinfo *ailist, *aip;
     struct addrinfo  hint;
     int err, n;
-    __bzero(&hint, sizeof(struct addrinfo));
+    bzero(&hint, sizeof(struct addrinfo));
     hint.ai_family = AF_INET;
     hint.ai_socktype= SOCK_STREAM;
     hint.ai_canonname = NULL;
@@ -553,13 +555,12 @@ interface_status_t interface_detect_beat_ethtool(int fd, char *iface)
     strncpy(ifr.ifr_name, iface, sizeof(ifr.ifr_name)-1);
 
     edata.cmd = ETHTOOL_GLINK;
-    ifr.ifr_data = (caddr_t) &edata;
+    ifr.ifr_data = (void*) &edata;
 
     if (ioctl(fd, SIOCETHTOOL, &ifr) == -1) {
         perror("ETHTOOL_GLINK failed ");
         return IFSTATUS_ERR;
     }
-
     return edata.data ? IFSTATUS_UP : IFSTATUS_DOWN;
 }
 

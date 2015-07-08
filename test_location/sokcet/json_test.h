@@ -19,6 +19,7 @@ DEF_CLASS(json_interface)
 	/*extended sha1 interface*/
 	CLASS(hmac_sha1) *sha1_interface;
 	int (*init)    	(CLASS(json_interface)*); /*initiate http object*/
+	int (*get_location_upload_json)(CLASS(json_interface) *arg, char *pbuffer);/*initiate http object*/
 	int (*get_time_request_json) (CLASS(json_interface) *arg, char *pbuffer);
 	int (*set_user_flow)	(CLASS(json_interface)*, int (*pfunc)(char*, size_t));/*start update fw from serverr*/ 
 	void *user_data;/*point to user private data*/

@@ -1,17 +1,9 @@
----- set Matches (18 in 0 files) ----
-Json_object.h (include\json-c): * Type of custom user delete functions.  See json_object_set_serializer.
-Json_object.h (include\json-c): * Type of a custom serialization function.  See json_object_set_serializer.
-Json_object.h (include\json-c): * If a custom serializer is already set on this object, any existing 
-Json_object.h (include\json-c): * user_delete function is called before the new one is set.
-Json_object.h (include\json-c): * and the default behaviour is reset.
-Json_object.h (include\json-c):extern void json_object_set_serializer(json_object *jso,
-Json_object.h (include\json-c): * Can be used with json_object_set_serializer().
-Json_object.h (include\json-c): * Can be used with json_object_set_serializer().
-Json_object.h (include\json-c): * and errno is set to EINVAL. null is equivalent to 0 (no error values set)
-Json_object.h (include\json-c): *   json_object_set_serializer(d, json_object_userdata_to_json_string,
-Json_object.h (include\json-c): * errno is set to EINVAL. null is equivalent to 0 (no error values set)
-Json_object.h (include\json-c): * If the value is too big to fit in a double, then the value is set to
-Json_object.h (include\json-c): * the closest infinity with errno set to ERANGE. If strings cannot be
-Json_object.h (include\json-c): * converted to their double value, then EINVAL is set & NaN is returned.
-Json_object.h (include\json-c): * Arrays of length 0 are interpreted as 0 (with no error flags set).
-Json_object.h (include\json-c): * converted using the above rules.  All other arrays set the error to
+---- _bzero Matches (8 in 4 files) ----
+Internet.c (sokcet):        __bzero(&hint, sizeof(struct addrinfo));
+Internet.c (sokcet):    __bzero(&hint, sizeof(struct addrinfo));
+Json_test.c (sokcet):    __bzero(pbuffer, sizeof(pbuffer));
+String.h (include):extern void __bzero (void *__s, size_t __n) __THROW __nonnull ((1));
+String2.h (include\i386-linux-gnu\bits):		     ? ({ void *__s = (s); __bzero (__s, n); __s; })	      \
+String2.h (include\i386-linux-gnu\bits):		  ? ({ void *__s = (s); __bzero (__s, n); __s; })	      \
+String2.h (include\i386-linux-gnu\bits):   GCC 3.0+ has __builtin_bzero as well, but at least till GCC 3.4
+String2.h (include\i386-linux-gnu\bits):#  define __bzero(s, n) __builtin_memset (s, '\0', n)

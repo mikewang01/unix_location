@@ -3,7 +3,7 @@ MIPS-CC = /opt/buildroot-gcc342/bin/mipsel-linux-gcc
 
 JSON_C_DIR=/usr
 INCFLAGS += -I/usr/include/json-c -I/usr/include/i386-linux-gnu/ -I/usr/include/ -I/usr/local/ssl/lib 
-LDFLAGS+=  -pthread -D_SVID_SOURCE -std=gnu99 -L/usr/lib -ljson-c -lssl -lcrypto
+LDFLAGS+= -Wall -pthread -D_SVID_SOURCE -std=gnu99 -L/usr/lib -ljson-c -lssl -lcrypto
 SRC = $(wildcard *.c)
 OBJ = e2s
 

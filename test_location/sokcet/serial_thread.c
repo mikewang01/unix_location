@@ -19,7 +19,6 @@
 #include <sys/ioctl.h>
 #include <assert.h>
 #include <sys/select.h>
-#include <curses.h>
 #include "serial_port.h"
 #include "config.h"
 /*********************************************************************
@@ -120,7 +119,7 @@ void *serial_thread(void *arg)
 				printf("serial data recieved\r\n");
 	 			cling_u_data_send(buffer, nread);
 			}else {
-                assert(FALSE);
+                return -1;
             }
         }//end of switch
 

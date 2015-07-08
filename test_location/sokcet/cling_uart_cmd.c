@@ -12,7 +12,6 @@
 #include "uart_protocol_mac.h"
 #include "stdio.h"
 #include "assert.h"
-#include "curses.h"
 /*********************************************************************
 * MACROS
 */
@@ -92,7 +91,7 @@ int  init_cling_uart(CLASS(cling_uart) *arg)
     } else {
 
     }
-    return TRUE;
+    return 0;
 }
 
 
@@ -113,7 +112,7 @@ static int  enable_recieving(CLASS(cling_uart) *arg)
     /*enable receive interrupt enable*/
     //ETS_UART_INTR_ENABLE();
 
-    return TRUE;
+    return 0;
 
 }
 #endif
@@ -133,7 +132,7 @@ disable_recieving(CLASS(cling_uart) *arg)
     assert(NULL != arg);
     /*enable receive interrupt enable*/
 
-    return TRUE;
+    return 0;
 
 }
 #endif
@@ -158,7 +157,7 @@ delete_cling_uart(CLASS(cling_uart) *arg)
     /*malloc corresponed dparameter buffer*/
     struct cling_uart_private_data *private_data = (struct cling_uart_private_data*)(arg->user_data);
     this = NULL;
-    return TRUE;
+    return 0;
 
 }
 #endif
@@ -183,7 +182,7 @@ static int cling_uart_taskid_register(CLASS(cling_uart) *arg, unsigned int short
 
     assert(NULL != callback_data);
 
-    return TRUE;
+    return 0;
 
 
 }
@@ -205,7 +204,7 @@ int cling_uart_ipc_fd_register(unsigned int  fd)
         ipc_fd =fd;
     }
 
-    return TRUE;
+    return 0;
 
 
 }

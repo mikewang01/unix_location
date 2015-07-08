@@ -13,7 +13,6 @@
 #include "uart_protocol_mac.h"
 #include "stdio.h"
 #include "assert.h"
-#include "curses.h"
 #include "serial_port.h"
  
 
@@ -302,7 +301,7 @@ static int add_payload2revlist(unsigned char *pbuffer, int size)
 	//printf("add_payload2revlist\n");
     /*if this lock is occupied by other process then return*/
     if (IS_SEMAPHORE_LOCKED(rev_fifo_semphore)) {
-        return FALSE;
+        return -1;
     }
 
 	printf("\r\ndata=");
@@ -316,11 +315,11 @@ static int add_payload2revlist(unsigned char *pbuffer, int size)
 SUCESS:
     /*leave criticla section ,release semphore here*/
     UNLOCK_SEMAPHORE(rev_fifo_semphore);
-    return TRUE;
+    return 0;
 FAILED:
     /*leave criticla section ,release semphore here*/
     UNLOCK_SEMAPHORE(rev_fifo_semphore);
-    return FALSE;
+    return -1;
 }
 
 /******************************************************************************
@@ -334,7 +333,7 @@ int obtain_payload_from_revlist(struct mac_layer_payload_rev **ppayload)
 
     /*if this lock is occupied by other process then return*/
     if (IS_SEMAPHORE_LOCKED(rev_fifo_semphore)) {
-        return FALSE;
+        return -1;
     }
 
     /*enter critical section to lock semphore so to make sure this is a atom acess*/
@@ -366,11 +365,11 @@ int obtain_payload_from_revlist(struct mac_layer_payload_rev **ppayload)
 SUCESS:
     /*leave criticla section ,release semphore here*/
     UNLOCK_SEMAPHORE(rev_fifo_semphore);
-    return TRUE;
+    return 0;
 FAILED:
     /*leave criticla section ,release semphore here*/
     UNLOCK_SEMAPHORE(rev_fifo_semphore);
-    return FALSE;
+    return -1;
 }
 
 /******************************************************************************
@@ -385,7 +384,7 @@ int mac_send_payload(char *ppayload, int lenth)
 	//printf("==============ble fota============%d\n", lenth);
     /*if this lock is occupied by other process then return*/
     if (IS_SEMAPHORE_LOCKED(send_fifo_semphore)) {
-        return FALSE;
+        return -1;
     }
     /*enter critical section to lock semphore so to make sure this is a atom acess*/
     LOCK_SEMAPHORE(send_fifo_semphore);
@@ -433,11 +432,11 @@ int mac_send_payload(char *ppayload, int lenth)
 SUCESS:
     /*leave criticla section ,release semphore here*/
     UNLOCK_SEMAPHORE(send_fifo_semphore);
-    return TRUE;
+    return 0;
 FAILED:
     /*leave criticla section ,release semphore here*/
     UNLOCK_SEMAPHORE(send_fifo_semphore);
-    return FALSE;
+    return -1;
 
 
 }
@@ -454,7 +453,7 @@ int mac_sendlist_mantain_demon()
     struct mac_layer_payload_send *payload_temp = send_package_list_header;
     /*if this lock is occupied by other process then return*/
     if (IS_SEMAPHORE_LOCKED(send_fifo_semphore)) {
-        return FALSE;
+        return -1;
     }
     /*enter critical section to lock semphore so to make sure this is a atom acess*/
     LOCK_SEMAPHORE(send_fifo_semphore);
@@ -516,11 +515,11 @@ int mac_sendlist_mantain_demon()
 SUCESS:
     /*leave criticla section ,release semphore here*/
     UNLOCK_SEMAPHORE(send_fifo_semphore);
-    return TRUE;
+    return 0;
 FAILED:
     /*leave criticla section ,release semphore here*/
     UNLOCK_SEMAPHORE(send_fifo_semphore);
-    return FALSE;
+    return -1;
 }
 
 /******************************************************************************
@@ -534,7 +533,7 @@ static int macsend_ack_recieved()
     struct mac_layer_payload_send *payload_temp = send_package_list_header;
     /**/
     if (NULL == payload_temp) {
-        return TRUE;
+        return 0;
 
     } else {
 
@@ -546,7 +545,7 @@ static int macsend_ack_recieved()
     }
 
 
-    return TRUE;
+    return 0;
 
 
 }
@@ -597,7 +596,7 @@ static int send_package_assemble(struct mac_layer_payload_send *payload_temp, en
     }
 
 
-    return TRUE;
+    return 0;
 
 
 }
@@ -633,7 +632,7 @@ int init_uart_implement(CLASS(uart_implement) *arg)
     arg->send_data = mac_send_payload;
     arg->get_data = NULL;
 	//uart_init(BIT_RATE_115200, BIT_RATE_115200);
-	return TRUE;
+	return 0;
 
 }
 
@@ -646,7 +645,7 @@ int init_uart_implement(CLASS(uart_implement) *arg)
 int register_serial_fd(int fd)
 {
    reg_serial_fd = fd;
-	return TRUE;
+	return 0;
 }
 
 

@@ -119,7 +119,7 @@ struct ifmap
     unsigned char port;
     /* 3 bytes spare */
   };
-
+ 
 /* Interface request structure used for socket ioctl's.  All interface
    ioctl's must have parameter definitions which begin with ifr_name.
    The remainder may be interface specific.  */

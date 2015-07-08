@@ -19,7 +19,6 @@
 #include <sys/ioctl.h>
 #include <assert.h>
 #include <sys/select.h>
-#include <curses.h>
 #include "serial_port.h"
 
 /*********************************************************************
@@ -90,7 +89,7 @@ int set_serial_port_speed(int fd, int speed)
     }
 
     //invalid baud rate
-    assert(FALSE);
+    return -1;
 }
 
 /**
@@ -119,7 +118,7 @@ int set_serial_port_ctrl_flag(int fd,int databits,int stopbits,int parity)
         options.c_cflag |= CS8;
         break;
     default:
-        assert(FALSE);
+        assert(-1);
         break;
     }
 
@@ -146,7 +145,7 @@ int set_serial_port_ctrl_flag(int fd,int databits,int stopbits,int parity)
         options.c_cflag &= ~CSTOPB;
         break;
     default:
-        assert(FALSE);
+        assert(-1);
         break;
     }
 	/*in case of getting rid of contrlling flag*/
@@ -160,7 +159,7 @@ int set_serial_port_ctrl_flag(int fd,int databits,int stopbits,int parity)
         options.c_cflag |= CSTOPB;
         break;
     default:
-        assert(FALSE);
+        assert(-1);
         break;
     }
 
@@ -282,7 +281,7 @@ int read_serial_port(int fd, unsigned char *buffer,size_t size, size_t *readcoun
                 ioctl(fd,FIONREAD,&iread);
                 if(iread == 0) {
                     *readcount = -1; //port closed
-                    return TRUE;
+                    return 0;
                 }
                 int count = 0;
                 if(*readcount != 0) {
@@ -293,7 +292,7 @@ int read_serial_port(int fd, unsigned char *buffer,size_t size, size_t *readcoun
                 nread += read(fd, buffer+nread, count);
 
             } else {
-                assert(FALSE);
+                assert(-1);
             }
         }//end of switch
     } while((*readcount != 0) && (nread < *readcount));
@@ -302,7 +301,7 @@ int read_serial_port(int fd, unsigned char *buffer,size_t size, size_t *readcoun
     if( 0 == *readcount) {
         *readcount = nread;
     }
-    return TRUE;
+    return 0;
 }
 
 /*
@@ -423,7 +422,7 @@ void *serial_thread(void *arg)
             		printf("com write error\r\n");
         		}
 			}else {
-                assert(FALSE);
+                assert(-1);
             }
         }//end of switch
 

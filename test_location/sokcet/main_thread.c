@@ -32,7 +32,6 @@
 #include <sys/ioctl.h>
 #include <assert.h>
 #include <sys/select.h>
-#include <curses.h>
 #include "serial_port.h"
 #include "json_test.h"
 #include "pthread.h"
@@ -109,9 +108,10 @@ int main()
 	check_network_status ();
 	NEW(json_obj,json_interface);
 	/*get time syc json sucessfully*/
-	if(json_obj->get_time_request_json(json_obj, pbuffer) == 0){
+	if(json_obj->get_location_upload_json(json_obj, pbuffer) == 0){
 		printf("get time syc request json = %s\n", pbuffer);
 	}
+	//static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer)
 #if 0
 	#define KEY  "5EHdd8_334dyUjjddleqH6YHHm"
 	#define TEXT "v1.0.2t45772(a)18:fe:34:9b:b4:85{\"action\":\"time\"}1429269133&blue=CLING E35931:32:33:34:35:36"
@@ -208,7 +208,7 @@ int main()
                     // printf("main thread pipe read le\n")
                     fprintf(stdout,"=%02x", buffer[i]);
                 }
-
+				printf("\n");
                 /*write data to serial thread through pipe*/
                 write(serial_pipe_write, "12345", 5);
 
