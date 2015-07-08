@@ -214,13 +214,26 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
     /*prapred for enpricption*/
 #if 1
 
-    json_object  *loacation_json_detail = NULL;
-    loacation_json_detail =  json_object_new_object();
+    json_object  *health_json_detail = NULL;
+    health_json_detail =  json_object_new_object();
     /*the inner josn specified for location json*/
-    json_object_object_add(loacation_json_detail, "btid", json_object_new_string(mac));
-    json_object_object_add(loacation_json_detail, "btmac", json_object_new_string(mac));
-    json_object_object_add(loacation_json_detail, "btmac", json_object_new_int(-50));
-    /*enpulse detailed data into data arryy */
+    json_object_object_add(health_json_detail, "MAC", json_object_new_string(mac));
+    json_object_object_add(health_json_detail, "U", json_object_new_string(mac));
+    json_object_object_add(health_json_detail, "T", json_object_new_int(-50));
+    json_object_object_add(health_json_detail, "D", json_object_new_int(-50));
+    json_object_object_add(health_json_detail, "WS", json_object_new_int(-50));
+	json_object_object_add(health_json_detail, "RS", json_object_new_int(-50));
+    json_object_object_add(health_json_detail, "ST", json_object_new_int(-50));
+	json_object_object_add(health_json_detail, "SP", json_object_new_int(-50));
+    json_object_object_add(health_json_detail, "HR", json_object_new_int(-50));
+    json_object_object_add(health_json_detail, "CF", json_object_new_int(-50));
+	json_object_object_add(health_json_detail, "PT", json_object_new_int(-50));
+    json_object_object_add(health_json_detail, "PE", json_object_new_int(-50));
+    json_object_object_add(health_json_detail, "WT", json_object_new_int(-50));
+	json_object_object_add(health_json_detail, "CT", json_object_new_int(-50));
+    json_object_object_add(health_json_detail, "CS", json_object_new_int(-50));
+	json_object_object_add(health_json_detail, "CM", json_object_new_int(-50));
+	/*enpulse detailed data into data arryy */
     json_object  *location_data_array = json_object_new_array();
     json_object_array_add(location_data_array, loacation_json_detail);
 
