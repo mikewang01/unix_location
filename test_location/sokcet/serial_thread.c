@@ -29,7 +29,6 @@ extern "C" {
 #endif
 #define BUFFER_SIZE 1024
 #define 	TEST_STRING "aaa"
-
 /*********************************************************************
 * TYPEDEFS
 */
@@ -59,7 +58,7 @@ void *serial_thread(void *arg)
 	printf("serial_thread running\r\n");
 	serial_timeout.tv_sec = SERIAL_SELECT_TIMEOUT/1000;
 	serial_timeout.tv_usec = (SERIAL_SELECT_TIMEOUT%1000)*1000;
-	
+
 	if((fd = serial_init(0)) < 0) {
         perror("serial init failed\r\n");
     }
@@ -105,8 +104,8 @@ void *serial_thread(void *arg)
 					continue;
                 }
                 nread = read(serial_para->fd, buffer, sizeof(buffer));
-				
 				for(int i = 0; i < nread; i++){
+					/*process data package passed from serial device*/
 					receive_one_char_callback(buffer[i]);
 				}
 				//buffer[nread] = 0;

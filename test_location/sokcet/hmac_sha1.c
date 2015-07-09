@@ -225,7 +225,7 @@ static int check_sum(CLASS(hmac_sha1) *arg, unsigned char *addr, int count, uint
         /* This is the inner loop */
         sum += * ((uint16_t*) addr);
         addr += 2;
-        count -= 2;
+         count -= 2;
     }
 
     /* Add left-over byte, if any */
@@ -233,11 +233,12 @@ static int check_sum(CLASS(hmac_sha1) *arg, unsigned char *addr, int count, uint
         sum += * (uint8_t*) addr;
 
     /* Fold 32-bit sum to 16 bits */
-    while (sum>>16)
+    while (sum >> 16)
         sum = (sum & 0xffff) + (sum >> 16);
     checksum = ~sum;
 #endif
-	*pchecksum = (uint16_t)(check_sum);
+	printf("internal checksum =%u\n", (uint16_t)(checksum&0xffff));
+	(*pchecksum) = (uint16_t)(checksum&0xffff);
     return 0;
 }
 

@@ -9,21 +9,18 @@
  *     2014/3/12, v1.0 create this file.
 *******************************************************************************/
 
-#include<netdb.h>
-#include<errno.h>
-#include<sys/socket.h>
+#include <netdb.h>
+#include <errno.h>
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <stdio.h>
 #include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
-#include<fcntl.h>
-#include<thread_db.h>
+#include <fcntl.h>
+#include <thread_db.h>
 #include <sys/ipc.h>
-#include "internet.h"
-#include "serial_port.h"
-#include "config.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -37,13 +34,14 @@
 #include "pthread.h"
 #include "int_compnent.h"
 #include "json_test.h"
+#include "internet.h"
+#include "serial_port.h"
+#include "config.h"
+
 /*********************************************************************
 * MACROS
 */
 #define MAX_COM  2
-
-
-
 
 /*********************************************************************
 * TYPEDEFS
@@ -99,7 +97,7 @@ int main()
     thread_t pid[MAX_COM];
     thread_t serid[MAX_COM];
     key_t key;
-	char pbuffer[1024];
+	char pbuffer[2048];
     struct s_msg in_msg_test;
     int serial_pipe_read, serial_pipe_write;
     int socket_pipe_read, socket_pipe_write;
@@ -108,7 +106,7 @@ int main()
 	check_network_status ();
 	NEW(json_obj,json_interface);
 	/*get time syc json sucessfully*/
-	if(json_obj->get_location_upload_json(json_obj, pbuffer) == 0){
+	if(json_obj->get_health_upload_json(json_obj, pbuffer) == 0){
 		printf("get time syc request json = %s\n", pbuffer);
 	}
 	//static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer)
@@ -225,7 +223,7 @@ int main()
 #endif
 
 //while(1);
-	printf("serial_pipe_write = %d", serial_pipe_write);
+	printf("main thread serial_pipe_write = %d\n", serial_pipe_write);
     char a[]="01234567891";
     for(;;) {
         write(socket_pipe_write,pbuffer,strlen(pbuffer)+1);

@@ -508,8 +508,8 @@ void* thread_socket(void* env)
     printf("pthread_socket_test_num = %d", a++);
     for(;;) {
         fprintf(stdout,"pthread_socket_test_num = %d\r\n", a++);
-        char buffer[1024];
-        char httphead[1024];
+        char buffer[2048];
+        char httphead[2048];
         /*WHEN THA LAST  INTERNET SENDING PEOCESS FINISHED, CHANGE THE ROLE TO  LISTEN TO PIPE WAIETING FOR NEW DATA*/
         if(GET_NETWORK_STATE(socket_inf) == STATE_ETH_DOWN) {
             if(select(socket_para->fd_max + 1, &pipe_rset, NULL , (fd_set *)NULL, NULL) < 0) {
@@ -520,7 +520,7 @@ void* thread_socket(void* env)
                 /*this meeans serial buffer is writravke*/
                 int nread = read(socket_para->pipe_child_thread->pipe_read_fd, buffer, sizeof(buffer));
                 buffer[nread] = 0;
-                sprintf(httphead, HTTP_HEAD_POST_SEGMENT, HICLING_TIME_PATH, HICLING_DOMAIN, buffer ? strlen(buffer) : 0);
+                sprintf(httphead, HTTP_HEAD_POST_SEGMENT,  ((void*)strstr(buffer, "btrssi") == NULL)?HICLING_HEALTH_PATH:HICLING_TIME_PATH, HICLING_DOMAIN, buffer ? strlen(buffer) : 0);
                 sprintf(httphead + strlen(httphead), HTTP_HEAD_INFO_SEGMENT);
                 strcat(httphead +  strlen(httphead), buffer);
                 //sprintf(httphead + os_strlen(httphead), HTTP_HEAD_INFO_SEGMENT);

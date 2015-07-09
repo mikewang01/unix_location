@@ -31,7 +31,7 @@
 #include "internet.h"
 #include "json_test.h"
 #include "uart_protocol_cmd.h"
-
+#include "version.h"
 
 /*********************************************************************
 * MACROS
@@ -193,16 +193,22 @@ int set_cling_information(CLASS(json_interface) *arg, char *pdev_id, char *pdev_
  *				 -1: get json request failed
  *
 *******************************************************************************/
+char *TEST_STRING  = "[\n{\n\"MAC\":\"31:32:33:34:35:36\",\n\"U\":17,\n\"T\":16,\n\"D\":4,\n\"WS\":2,\n\"RS\":3,\n\"ST\":1,\n\"SP\":5,\n\"HR\":14,\n\"CF\":15,\n\"PT\":11,\n\"WT\":13,\n\"CT\":6,\n\"CS\":7,\n\"CM\":8\n},\n{\n\"MAC\":\"31:32:33:34:35:37\",\n\"U\":17,\n\"T\":16,\n\"D\":4,\n\"WS\":2,\n\"RS\":3,\n\"ST\":1,\n\"SP\":5,\n\"HR\":14,\n\"CF\":15,\n\"PT\":11,\n\"WT\":13,\n\"CT\":6,\n\"CS\":7,\n\"CM\":8\n},\n{\n\"MAC\":\"31:32:33:34:35:38\",\n\"U\":17,\n\"T\":16,\n\"D\":4,\n\"WS\":2,\n\"RS\":3,\n\"ST\":1,\n\"SP\":5,\n\"HR\":14,\n\"CF\":15,\n\"PT\":11,\n\"WT\":13,\n\"CT\":6,\n\"CS\":7,\n\"CM\":8\n},\n{\n\"MAC\":\"31:32:35:34:35:37\",\n\"U\":17,\n\"T\":16,\n\"D\":4,\n\"WS\":2,\n\"RS\":3,\n\"ST\":1,\n\"SP\":5,\n\"HR\":14,\n\"CF\":15,\n\"PT\":11,\n\"WT\":13,\n\"CT\":6,\n\"CS\":7,\n\"CM\":8\n}\n]";
+
+//"[{\"MAC\":\"31:32:33:34:35:36\",\"U\":17,\"T\":16,\"D\":4,\"WS\":2,\"RS\":3,\"ST\":1,\"SP\":5,\"HR\":14,\"CF\":15,\"PT\":11,\"WT\":13,\"CT\":6,\"CS\":7,\"CM\":8},{\"MAC\":\"31:32:33:34:35:37\",\"U\":17,\"T\":16,\"D\":4,\"WS\":2,\"RS\":3,\"ST\":1,\"SP\":5,\"HR\":14,\"CF\":15,\"PT\":11,\"WT\":13,\"CT\":6,\"CS\":7,\"CM\":8},{\"MAC\":\"31:32:33:34:35:38\",\"U\":17,\"T\":16,\"D\":4,\"WS\":2,\"RS\":3,\"ST\":1,\"SP\":5,\"HR\":14,\"CF\":15,\"PT\":11,\"WT\":13,\"CT\":6,\"CS\":7,\"CM\":8},{\"MAC\":\"31:32:35:34:35:37\",\"U\":17,\"T\":16,\"D\":4,\"WS\":2,\"RS\":3,\"ST\":1,\"SP\":5,\"HR\":14,\"CF\":15,\"PT\":11,\"WT\":13,\"CT\":6,\"CS\":7,\"CM\":8}]"
+
 static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*initiate http object*/
 {
 
     const char encryption_sequnece[][30] = {
         "version",
         "udid",
-        "request_body",
         "check_sum",
         "timestamp",
     };
+	/*validate pbuffer pointer*/
+	assert(pbuffer != NULL);
+	
     char mac[60];
     char enpryption_text[1024];
     /*clear memory buffer*/
@@ -213,53 +219,62 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
     arg->internet_interface->get_mac(arg->internet_interface, mac, &lenth);
     /*prapred for enpricption*/
 #if 1
-
-    json_object  *health_json_detail = NULL;
-    health_json_detail =  json_object_new_object();
-    /*the inner josn specified for location json*/
-    json_object_object_add(health_json_detail, "MAC", json_object_new_string(mac));
-    json_object_object_add(health_json_detail, "U", json_object_new_string(mac));
-    json_object_object_add(health_json_detail, "T", json_object_new_int(-50));
-    json_object_object_add(health_json_detail, "D", json_object_new_int(-50));
-    json_object_object_add(health_json_detail, "WS", json_object_new_int(-50));
-	json_object_object_add(health_json_detail, "RS", json_object_new_int(-50));
-    json_object_object_add(health_json_detail, "ST", json_object_new_int(-50));
-	json_object_object_add(health_json_detail, "SP", json_object_new_int(-50));
-    json_object_object_add(health_json_detail, "HR", json_object_new_int(-50));
-    json_object_object_add(health_json_detail, "CF", json_object_new_int(-50));
-	json_object_object_add(health_json_detail, "PT", json_object_new_int(-50));
-    json_object_object_add(health_json_detail, "PE", json_object_new_int(-50));
-    json_object_object_add(health_json_detail, "WT", json_object_new_int(-50));
-	json_object_object_add(health_json_detail, "CT", json_object_new_int(-50));
-    json_object_object_add(health_json_detail, "CS", json_object_new_int(-50));
-	json_object_object_add(health_json_detail, "CM", json_object_new_int(-50));
 	/*enpulse detailed data into data arryy */
-    json_object  *location_data_array = json_object_new_array();
-    json_object_array_add(location_data_array, loacation_json_detail);
+    json_object  *health_data_array = json_object_new_array();
 
+	for(int i=0; i < 5; i++){
+	    json_object  *health_json_detail =  json_object_new_object();	
+	    /*the inner josn specified for location json*/
+  		json_object_object_add(health_json_detail, "MAC", json_object_new_string("11:22:33:44:55"));
+	    json_object_object_add(health_json_detail, "U",  json_object_new_int(17));
+	    json_object_object_add(health_json_detail, "T", json_object_new_int(16));
+	    json_object_object_add(health_json_detail, "D", json_object_new_int(12));
+	    json_object_object_add(health_json_detail, "WS", json_object_new_int(18));
+		json_object_object_add(health_json_detail, "RS", json_object_new_int(19));
+	    json_object_object_add(health_json_detail, "ST", json_object_new_int(80));
+		json_object_object_add(health_json_detail, "SP", json_object_new_int(30));
+	    json_object_object_add(health_json_detail, "HR", json_object_new_int(60));
+	    json_object_object_add(health_json_detail, "CF", json_object_new_int(20));
+		json_object_object_add(health_json_detail, "PT", json_object_new_int(30));
+	    json_object_object_add(health_json_detail, "PE", json_object_new_int(30));
+	    json_object_object_add(health_json_detail, "WT", json_object_new_int(40));
+		json_object_object_add(health_json_detail, "CT", json_object_new_int(50));
+	    json_object_object_add(health_json_detail, "CS", json_object_new_int(52));
+		json_object_object_add(health_json_detail, "CM", json_object_new_int(96));
+		
+		/*add health data into */
+	    json_object_array_add(health_data_array, health_json_detail);
+	}
+	
+	
     /*the outter layer json*/
-    json_object  *loacation_json_body = NULL;
-    loacation_json_body =  json_object_new_object();
-    json_object_object_add(loacation_json_body, "udid", json_object_new_string(mac));
-    json_object_object_add(loacation_json_body, "version", json_object_new_string("1.0.0.0"));
-    json_object_object_add(loacation_json_body, "timestamp", json_object_new_int(time(NULL)));
-    json_object_object_add(loacation_json_body, "signature",  json_object_new_string("NULL"));
-    json_object_object_add(loacation_json_body, "blue", location_data_array);
-    json_object_object_add(loacation_json_body, "request_body", json_object_new_string("{\"action\":\"time\"}"));
+    json_object  *health_json_body = NULL;
+    health_json_body =  json_object_new_object();
+    json_object_object_add(health_json_body, "udid", json_object_new_string(mac));
+    json_object_object_add(health_json_body, "version", json_object_new_string("1.0.0.0"));
+    json_object_object_add(health_json_body, "timestamp", json_object_new_int(time(NULL)));
+    json_object_object_add(health_json_body, "signature",  json_object_new_string("NULL"));
+    //json_object_object_add(health_json_body, "blue", json_object_new_string(""));
+    json_object_object_add(health_json_body, "request_body", json_object_new_string(json_object_to_json_string(health_data_array)));
+
+
 
     for(int i = 0 ; i < sizeof(encryption_sequnece)/sizeof(encryption_sequnece[0]); i++ ) {
         struct json_object *value;
         /*if get find the key successfully*/
-        if(json_object_object_get_ex(loacation_json_body, encryption_sequnece[i], &value) ==  TRUE) {
+        if(json_object_object_get_ex(health_json_body, encryption_sequnece[i], &value) ==  TRUE) {
             strcat(enpryption_text, json_object_to_json_string(value));
         } else { /*come to checksum part*/
             if(strcmp(encryption_sequnece[i], "check_sum") == 0) {
-                if(json_object_object_get_ex(loacation_json_body, "request_body", &value) ==  TRUE) {
-                    uint16_t check_sum = 0;
+                if(json_object_object_get_ex(health_json_body, "request_body", &value) ==  TRUE) {
+                    uint16_t checksum = 0;
+					value = health_data_array;
                     printf("json_object_to_json_string(value)= %s\n",json_object_to_json_string(value));
-                    arg->sha1_interface->check_sum(arg->sha1_interface, json_object_to_json_string(value), strlen(json_object_to_json_string(value)), &check_sum);
+                    arg->sha1_interface->check_sum(arg->sha1_interface, json_object_to_json_string(value), strlen(json_object_to_json_string(value)), &checksum);
+                    //arg->sha1_interface->check_sum(arg->sha1_interface, TEST_STRING, strlen(TEST_STRING), &checksum);
+					printf("check sum value = %u\n", checksum);
                     /*printf check sum value and random number to the end of string*/
-                    sprintf(enpryption_text + strlen(enpryption_text), "%d%d", check_sum, CLING_SCAN_DATA_RANDOMNUM);
+                    sprintf(enpryption_text + strlen(enpryption_text), "%d%d", checksum, CLING_SCAN_DATA_RANDOMNUM);
                 }
             }
         }
@@ -279,11 +294,11 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
     printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
     printf("code64 = %s\n", sha1_encode64);
     /*accomplishment the signature key value*/
-    json_object_object_add(loacation_json_body, "signature",  json_object_new_string(sha1_encode64));
+    json_object_object_add(health_json_body, "signature",  json_object_new_string(sha1_encode64));
 
     //sprintf(pbuffer, "%s", json_object_to_json_string(time_req_object));
     //printf("my_object.to_string()=%s\n", pbuffer);
-    printf("location json =%s\n enpryption text= %s\n", json_object_to_json_string(loacation_json_body), enpryption_text);
+    sprintf(pbuffer, "%s", json_object_to_json_string(health_json_body));
 
 #endif
 
@@ -311,6 +326,9 @@ static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer) /
         "check_sum",
         "timestamp",
     };
+
+	assert(pbuffer != NULL);
+	
     char mac[60];
     char enpryption_text[1024];
     /*clear memory buffer*/
@@ -378,8 +396,9 @@ static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer) /
 
     //sprintf(pbuffer, "%s", json_object_to_json_string(time_req_object));
     //printf("my_object.to_string()=%s\n", pbuffer);
+    /*transfer josn to string for better sendding*/
+	sprintf(pbuffer, "%s", json_object_to_json_string(loacation_json_body));
     printf("location json =%s\n enpryption text= %s\n", json_object_to_json_string(loacation_json_body), enpryption_text);
-
 #endif
 
     return 0;
@@ -486,6 +505,7 @@ int init_json_interface (CLASS(json_interface) *arg)
 
     arg->get_time_request_json = get_time_request_json;
     arg->get_location_upload_json = get_location_upload_json;
+	arg->get_health_upload_json = get_health_upload_json;
 
     NEW(arg->internet_interface,  int_comp);
     NEW(arg->sha1_interface , hmac_sha1);
