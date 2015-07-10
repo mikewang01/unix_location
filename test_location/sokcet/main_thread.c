@@ -106,8 +106,16 @@ int main()
 	check_network_status ();
 	NEW(json_obj,json_interface);
 	/*get time syc json sucessfully*/
+	json_obj->set_location_inf(json_obj, "ecling 123", "00:22:33:44", -100, time(NULL));
+	json_obj->set_location_inf(json_obj, "tcling 123", "00:22:33:44", -100, time(NULL));
+	
+	if(json_obj->get_location_upload_json(json_obj, pbuffer) == 0){
+		printf("get get_location_upload_json = %s\n", pbuffer);
+	}
 	if(json_obj->get_health_upload_json(json_obj, pbuffer) == 0){
-		printf("get time syc request json = %s\n", pbuffer);
+		printf("get get_location_upload_json = %s\n", pbuffer);
+	}else{
+		printf("get health json eror\n");
 	}
 	//static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer)
 #if 0

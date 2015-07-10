@@ -59,25 +59,36 @@
 */
 
 /*cling device information related strcutor*/
+struct cling_location_inf {
+    char btid[JOSN_CLING_BTID_SIZE]; /*device id*/
+    char btmac[JOSN_CLING_BTMAC_SIZE];/*device mac*/
+    int btrssi; /*device rssi signal*/
+    struct cling_health_inf_rev *ptr; /*cling inf passed from uart*/
+    struct cling_location_inf *pnext; /*next inf to send*/
+};
+/*cling device information related strcutor*/
 struct cling_health_inf {
     char btid[JOSN_CLING_BTID_SIZE]; /*device id*/
     char btmac[JOSN_CLING_BTMAC_SIZE];/*device mac*/
     char btrssi[JOSN_CLING_BTRSSI_SIZE]; /*device rssi signal*/
-    struct cling_inf_rev *ptr; /*cling inf passed from uart*/
-    struct cling_health_inf *pnext; /*next inf to send*/
+    struct health_data_inf health;
+    char timestamp_ble[JOSN_TIMESTAMP_SIZE];
+    struct cling_health_inf_rev *ptr; /*cling inf passed from uart*/
+    struct cling_health_inf *pnext;	/*next inf to send*/
 };
 /*upload information struct*/
-struct cling_inf_upload_json {
+struct cling_inf_upload_json_chain {
 
     char udid[JOSN_MAC_SIZE];/**/
     char version[JOSN_VERSION_SIZE];
     uint32_t timestamp;
     char timestamp_str[JOSN_TIMESTAMP_SIZE];
     char signature[JOSN_SIGNATURE_SIZE];
-    struct cling_health_inf *pinf;
-    uint16_t cling_inf_chain_lenth;
+    struct cling_location_inf *pinf_l;
+    struct cling_health_inf *pinf_h;
+    uint16_t cling_location_inf_chain_lenth; /**/
+    uint16_t cling_health_inf_chain_lenth;
     char request_body[JOSN_REQUEST_BODY_SIZE];
-    char enpryption_text[4+JOSN_TIMESTAMP_SIZE + JOSN_MAC_SIZE + JOSN_VERSION_SIZE + JOSN_TIMESTAMP_SIZE + JOSN_REQUEST_BODY_SIZE + sizeof("&blue=") + JOSN_CLING_BTID_SIZE + JOSN_CLING_BTMAC_SIZE];
 };
 
 
@@ -92,6 +103,68 @@ struct cling_inf_upload_json {
 * LOCAL VARIABLES
 */
 
+
+/******************************************************************************
+ * FunctionName : set_cling_health_information
+ * Description  : internal used to initiate time stamp object object
+ * Parameters   : arg -- object pointer
+
+ * Returns      : none
+*******************************************************************************/
+
+#if 1
+static int set_health_information(CLASS(json_interface) *arg,struct health_data_inf health, char *pdev_id, char *pdev_mac, uint32_t time_stamp)
+{
+#define CLING_DEVICE_ID_LENTH 	10
+#define CLING_DEVICE_MAC_LENTH	6
+    assert((NULL != pdev_id) && (NULL != pdev_mac));
+    /*malloc corresponed dparameter buffer*/
+    struct cling_inf_upload_json_chain *cling_health_inf_data = ((struct cling_inf_upload_json_chain*)(arg->user_data));
+    assert(NULL != cling_health_inf_data);
+
+    /*assign specific  to user data aerea*/
+    cling_health_inf_data->timestamp = time_stamp;
+    /*if chain list is full*/
+    if (cling_health_inf_data->cling_health_inf_chain_lenth > CLING_INF_LENTH_LIMITATION) {
+
+        return -1;
+
+    } else {
+        /*get cling inf pointer*/
+        struct cling_health_inf *p = cling_health_inf_data->pinf_h;
+        /*this is the first data attatched to the list header*/
+        if (p == NULL) {
+            cling_health_inf_data->pinf_h = (struct cling_health_inf*)malloc(sizeof(struct cling_health_inf));
+            p = cling_health_inf_data->pinf_h;
+        } else {
+            /*search to the end of chain list*/
+            for(; p->pnext != NULL; p = p->pnext);
+            p->pnext =  (struct cling_health_inf*)malloc(sizeof(struct cling_health_inf));
+            p = p->pnext;
+        }
+
+        assert(NULL != p);
+        /*one more new member has been added to list*/
+        cling_health_inf_data->cling_health_inf_chain_lenth++;
+        p->pnext = NULL;
+        p->health = health;
+        memcpy((char *)(p->btid), pdev_id, CLING_DEVICE_ID_LENTH);
+        p->btid[CLING_DEVICE_ID_LENTH] = 0;
+        memcpy((char *)(p->btmac), pdev_mac, CLING_DEVICE_MAC_LENTH);
+        p->btmac[CLING_DEVICE_MAC_LENTH] = 0;
+        //p->btrssi[0] = rssi;
+
+    }
+
+    /*clear enpryption data buffer*/
+   
+    /*if chain is full after the last data pushed in  then reutn -1*/
+    if (cling_health_inf_data->cling_health_inf_chain_lenth > CLING_INF_LENTH_LIMITATION) {
+        return 1;
+    }
+    return 0;
+}
+#endif
 
 
 /******************************************************************************
@@ -128,57 +201,63 @@ int get_rid_of_quotation(char *pbuffer, int lenth) /*initiate http object*/
 
 
 /******************************************************************************
- * FunctionName : set_cling_information
+ * FunctionName : set_cling_health_information
  * Description  : internal used to initiate time stamp object object
  * Parameters   : arg -- object pointer
 
- * Returns      : none
+ * Returns      : -1 location has been full. without the data current pushed in
+ *				   0 location data has been stored in chain successgully
+ *				   1 location chain has been full with current data pusded in
 *******************************************************************************/
 
 #if 1
-int set_cling_information(CLASS(json_interface) *arg, char *pdev_id, char *pdev_mac, char rssi, uint32_t time_stamp)
+int set_location_information(CLASS(json_interface) *arg, char *pdev_id, char *pdev_mac, char rssi, uint32_t time_stamp)
 {
 #define CLING_DEVICE_ID_LENTH 	4
 #define CLING_DEVICE_MAC_LENTH	6
     assert((NULL != pdev_id) && (NULL != pdev_mac));
     /*malloc corresponed dparameter buffer*/
-    struct cling_inf_upload_json *cling_inf_data = ((struct cling_inf_upload_json*)(arg->user_data));
-    assert(NULL != cling_inf_data);
+    struct cling_inf_upload_json_chain *cling_location_inf_data = ((struct cling_inf_upload_json_chain*)(arg->user_data));
+    assert(NULL != cling_location_inf_data);
 
     /*assign specific  to user data aerea*/
-    cling_inf_data->timestamp = time_stamp;
+    cling_location_inf_data->timestamp = time_stamp;
     /*if chain list is full*/
-    if (cling_inf_data->cling_inf_chain_lenth > CLING_INF_LENTH_LIMITATION) {
+    if (cling_location_inf_data->cling_location_inf_chain_lenth > CLING_INF_LENTH_LIMITATION) {
 
         return -1;
 
     } else {
         /*get cling inf pointer*/
-        struct cling_health_inf *p = cling_inf_data->pinf;
+        struct cling_location_inf *p = cling_location_inf_data->pinf_l;
         /*this is the first data attatched to the list header*/
         if (p == NULL) {
-            cling_inf_data->pinf = (struct cling_health_inf*)malloc(sizeof(struct cling_health_inf));
-            p = cling_inf_data->pinf;
+            cling_location_inf_data->pinf_l = (struct cling_location_inf*)malloc(sizeof(struct cling_location_inf));
+            p = cling_location_inf_data->pinf_l;
         } else {
             /*search to the end of chain list*/
             for(; p->pnext != NULL; p = p->pnext);
-            p->pnext =  (struct cling_health_inf*)malloc(sizeof(struct cling_health_inf));
+            p->pnext =  (struct cling_location_inf*)malloc(sizeof(struct cling_location_inf));
             p = p->pnext;
         }
 
         assert(NULL != p);
         /*one more new member has been added to list*/
-        cling_inf_data->cling_inf_chain_lenth++;
+        cling_location_inf_data->cling_location_inf_chain_lenth++;
         p->pnext = NULL;
         memcpy((char *)(p->btid), pdev_id, CLING_DEVICE_ID_LENTH);
         p->btid[CLING_DEVICE_ID_LENTH] = 0;
         memcpy((char *)(p->btmac), pdev_mac, CLING_DEVICE_MAC_LENTH);
         p->btmac[CLING_DEVICE_MAC_LENTH] = 0;
-        p->btrssi[0] = rssi;
+        p->btrssi = rssi;
 
     }
     /*clear enpryption data buffer*/
-    memset(cling_inf_data->enpryption_text, 0, sizeof(cling_inf_data->enpryption_text));
+   
+    /*if chain is full after the last data pushed in  then reutn -1*/
+    if (cling_location_inf_data->cling_location_inf_chain_lenth > CLING_INF_LENTH_LIMITATION) {
+        return 1;
+    }
 
 }
 #endif
@@ -206,57 +285,84 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
         "check_sum",
         "timestamp",
     };
-	/*validate pbuffer pointer*/
-	assert(pbuffer != NULL);
+
+	struct cling_inf_upload_json_chain *cling_health_inf_data = ((struct cling_inf_upload_json_chain*)(arg->user_data));
+    /*get cling inf pointer*/
+    struct cling_health_inf *p = cling_health_inf_data->pinf_h;
+    /*this means there is no data in location chain ,just return -1*/
+    if(p == NULL) {
+        return -1;
+    }else{
+		cling_health_inf_data->pinf_h= NULL;
+	}
 	
-    char mac[60];
+    /*validate pbuffer pointer*/
+    assert(pbuffer != NULL);
+	
     char enpryption_text[1024];
     /*clear memory buffer*/
     bzero(enpryption_text, sizeof(enpryption_text));
     //char pbuffer[1024];
     int lenth;
-
-    arg->internet_interface->get_mac(arg->internet_interface, mac, &lenth);
     /*prapred for enpricption*/
 #if 1
-	/*enpulse detailed data into data arryy */
+    /*enpulse detailed data into data arryy */
     json_object  *health_data_array = json_object_new_array();
+    /*search to the end of chain list*/
+    for(; p != NULL; cling_health_inf_data->cling_health_inf_chain_lenth --)
+    {
+        json_object  *health_json_detail =  json_object_new_object();
+        /*the inside one specified for location json*/
+        json_object_object_add(health_json_detail, "MAC", json_object_new_string(p->btmac));
 
-	for(int i=0; i < 5; i++){
-	    json_object  *health_json_detail =  json_object_new_object();	
-	    /*the inner josn specified for location json*/
-  		json_object_object_add(health_json_detail, "MAC", json_object_new_string("11:22:33:44:55"));
-	    json_object_object_add(health_json_detail, "U",  json_object_new_int(17));
-	    json_object_object_add(health_json_detail, "T", json_object_new_int(16));
-	    json_object_object_add(health_json_detail, "D", json_object_new_int(12));
-	    json_object_object_add(health_json_detail, "WS", json_object_new_int(18));
-		json_object_object_add(health_json_detail, "RS", json_object_new_int(19));
-	    json_object_object_add(health_json_detail, "ST", json_object_new_int(80));
-		json_object_object_add(health_json_detail, "SP", json_object_new_int(30));
-	    json_object_object_add(health_json_detail, "HR", json_object_new_int(60));
-	    json_object_object_add(health_json_detail, "CF", json_object_new_int(20));
-		json_object_object_add(health_json_detail, "PT", json_object_new_int(30));
-	    json_object_object_add(health_json_detail, "PE", json_object_new_int(30));
-	    json_object_object_add(health_json_detail, "WT", json_object_new_int(40));
-		json_object_object_add(health_json_detail, "CT", json_object_new_int(50));
-	    json_object_object_add(health_json_detail, "CS", json_object_new_int(52));
-		json_object_object_add(health_json_detail, "CM", json_object_new_int(96));
+		/*the utc time when beacon revieved location information*/
+        json_object_object_add(health_json_detail, "U",  json_object_new_int(p->health.beacon_timestamp));
+		/*tranlate ble date format into */
+		struct rtc_time i;
+		arg->base_rtc->to_beijing_tm (cling_health_inf_data->timestamp, &i);
+		/*merge current year month with  transmitted from ble device*/
+		printf("beijign year =%d , month=%d  date = %d\n",i.tm_year, i.tm_mon,p->health.date);
+		p->health.ble_timestamp = arg->base_rtc->make_beijing_time (i.tm_year, i.tm_mon, p->health.date, 0, 0, 0);
+        json_object_object_add(health_json_detail, "T",  p->health.ble_timestamp);
+        json_object_object_add(health_json_detail, "D",  p->health.total_distance);
+        json_object_object_add(health_json_detail, "WS", p->health.walk_steps);
+        json_object_object_add(health_json_detail, "RS", p->health.run_steps);
+        json_object_object_add(health_json_detail, "ST", p->health.total_steps);
+        json_object_object_add(health_json_detail, "SP", p->health.sport_time_total);
+        json_object_object_add(health_json_detail, "HR", p->health.heart_rate);
+        json_object_object_add(health_json_detail, "CF", p->health.skin_temp);
+        json_object_object_add(health_json_detail, "PT", p->health.sleep_total);
+        json_object_object_add(health_json_detail, "PE", p->health.sleep_efficient);
+        json_object_object_add(health_json_detail, "WT", p->health.wakeup_times);
+        json_object_object_add(health_json_detail, "CT", p->health.calories_total);
+        json_object_object_add(health_json_detail, "CS", p->health.calories_sports);
+        json_object_object_add(health_json_detail, "CM", p->health.calories_mentablisim);
+        /*add health data into */
+        json_object_array_add(health_data_array, health_json_detail);
+		struct cling_health_inf *s =p;
+		p = p->pnext;
+		/*release memory occupied by location information */
+		free(s);
 		
-		/*add health data into */
-	    json_object_array_add(health_data_array, health_json_detail);
-	}
-	
-	
+   	}
+
+ 	printf("cling_health_inf_data->cling_health_inf_chain_lenth =%d\n", cling_health_inf_data->cling_health_inf_chain_lenth);
+	char mac[60];
+	char version[60];
+	BEACON_GET_VERSION(version);
+    /*the outter layer json*/
+    json_object  *loacation_json_body = NULL;
+    arg->internet_interface->get_mac(arg->internet_interface, mac, &lenth);
+    /*prapred for enpricption*/
     /*the outter layer json*/
     json_object  *health_json_body = NULL;
     health_json_body =  json_object_new_object();
     json_object_object_add(health_json_body, "udid", json_object_new_string(mac));
-    json_object_object_add(health_json_body, "version", json_object_new_string("1.0.0.0"));
-    json_object_object_add(health_json_body, "timestamp", json_object_new_int(time(NULL)));
+    json_object_object_add(health_json_body, "version", json_object_new_string(version));
+    json_object_object_add(health_json_body, "timestamp", json_object_new_int((cling_health_inf_data->timestamp)));
     json_object_object_add(health_json_body, "signature",  json_object_new_string("NULL"));
     //json_object_object_add(health_json_body, "blue", json_object_new_string(""));
-    json_object_object_add(health_json_body, "request_body", json_object_new_string(json_object_to_json_string(health_data_array)));
-
+    json_object_object_add(health_json_body, "request_body", json_tokener_parse((json_object_to_json_string(health_data_array))));
 
 
     for(int i = 0 ; i < sizeof(encryption_sequnece)/sizeof(encryption_sequnece[0]); i++ ) {
@@ -268,11 +374,14 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
             if(strcmp(encryption_sequnece[i], "check_sum") == 0) {
                 if(json_object_object_get_ex(health_json_body, "request_body", &value) ==  TRUE) {
                     uint16_t checksum = 0;
-					value = health_data_array;
-                    printf("json_object_to_json_string(value)= %s\n",json_object_to_json_string(value));
-                    arg->sha1_interface->check_sum(arg->sha1_interface, json_object_to_json_string(value), strlen(json_object_to_json_string(value)), &checksum);
+                    //value = health_data_array;
+                    char *s = json_object_to_json_string(value);
+                    *(s + strlen(s) - 1) = 0;
+
+                    printf("json_object_to_json_string(value)= %s\n",s+1);
+                    arg->sha1_interface->check_sum(arg->sha1_interface, s+1, strlen(s+1), &checksum);
                     //arg->sha1_interface->check_sum(arg->sha1_interface, TEST_STRING, strlen(TEST_STRING), &checksum);
-					printf("check sum value = %u\n", checksum);
+                    printf("check sum value = %u\n", checksum);
                     /*printf check sum value and random number to the end of string*/
                     sprintf(enpryption_text + strlen(enpryption_text), "%d%d", checksum, CLING_SCAN_DATA_RANDOMNUM);
                 }
@@ -326,36 +435,56 @@ static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer) /
         "check_sum",
         "timestamp",
     };
+    assert(pbuffer != NULL);
+    struct cling_inf_upload_json_chain *cling_location_inf_data = ((struct cling_inf_upload_json_chain*)(arg->user_data));
+    /*get cling inf pointer*/
+    struct cling_location_inf *p = cling_location_inf_data->pinf_l;
+    /*this means there is no data in location chain ,just return -1*/
+    if(p == NULL) {
+        return -1;
+    }else{
+		cling_location_inf_data->pinf_l = NULL;
+	}
 
-	assert(pbuffer != NULL);
-	
-    char mac[60];
     char enpryption_text[1024];
     /*clear memory buffer*/
     bzero(enpryption_text, sizeof(enpryption_text));
-    //char pbuffer[1024];
-    int lenth;
 
-    arg->internet_interface->get_mac(arg->internet_interface, mac, &lenth);
-    /*prapred for enpricption*/
+
+
+
 #if 1
-
-    json_object  *loacation_json_detail = NULL;
-    loacation_json_detail =  json_object_new_object();
-    /*the inner josn specified for location json*/
-    json_object_object_add(loacation_json_detail, "btid", json_object_new_string(mac));
-    json_object_object_add(loacation_json_detail, "btmac", json_object_new_string(mac));
-    json_object_object_add(loacation_json_detail, "btmac", json_object_new_int(-50));
-    /*enpulse detailed data into data arryy */
     json_object  *location_data_array = json_object_new_array();
-    json_object_array_add(location_data_array, loacation_json_detail);
 
+    /*search to the end of chain list*/
+    for(; p != NULL; cling_location_inf_data->cling_location_inf_chain_lenth--)
+    {
+        json_object  *loacation_json_detail =  json_object_new_object();
+        /*the inner josn specified for location json*/
+        json_object_object_add(loacation_json_detail, "btid", json_object_new_string(p->btid));
+        json_object_object_add(loacation_json_detail, "btmac", json_object_new_string(p->btmac));
+        json_object_object_add(loacation_json_detail, "rssi", json_object_new_int(p->btrssi));
+        /*enpulse detailed data into data arryy */
+		json_object_array_add(location_data_array, loacation_json_detail);
+		struct cling_location_inf *s =p;
+		p = p->pnext;
+		/*release location occupied memory*/
+		free(s);
+    }
+ 	printf("cling_health_inf_data->cling_health_inf_chain_lenth =%d\n", cling_location_inf_data->cling_location_inf_chain_lenth);
+
+	char mac[60],version[60];
+	//char pbuffer[1024];
+    int lenth;
+	BEACON_GET_VERSION(version);
     /*the outter layer json*/
     json_object  *loacation_json_body = NULL;
+    arg->internet_interface->get_mac(arg->internet_interface, mac, &lenth);
+    /*prapred for enpricption*/
     loacation_json_body =  json_object_new_object();
     json_object_object_add(loacation_json_body, "udid", json_object_new_string(mac));
-    json_object_object_add(loacation_json_body, "version", json_object_new_string("1.0.0.0"));
-    json_object_object_add(loacation_json_body, "timestamp", json_object_new_int(time(NULL)));
+    json_object_object_add(loacation_json_body, "version", json_object_new_string(version));
+    json_object_object_add(loacation_json_body, "timestamp", json_object_new_int(cling_location_inf_data->timestamp));
     json_object_object_add(loacation_json_body, "signature",  json_object_new_string("NULL"));
     json_object_object_add(loacation_json_body, "blue", location_data_array);
     json_object_object_add(loacation_json_body, "request_body", json_object_new_string("{\"action\":\"time\"}"));
@@ -394,13 +523,12 @@ static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer) /
     /*accomplishment the signature key value*/
     json_object_object_add(loacation_json_body, "signature",  json_object_new_string(sha1_encode64));
 
-    //sprintf(pbuffer, "%s", json_object_to_json_string(time_req_object));
-    //printf("my_object.to_string()=%s\n", pbuffer);
+//sprintf(pbuffer, "%s", json_object_to_json_string(time_req_object));
+//printf("my_object.to_string()=%s\n", pbuffer);
     /*transfer josn to string for better sendding*/
-	sprintf(pbuffer, "%s", json_object_to_json_string(loacation_json_body));
+    sprintf(pbuffer, "%s", json_object_to_json_string(loacation_json_body));
     printf("location json =%s\n enpryption text= %s\n", json_object_to_json_string(loacation_json_body), enpryption_text);
 #endif
-
     return 0;
 }
 
@@ -452,7 +580,7 @@ int get_time_request_json(CLASS(json_interface) *arg, char *pbuffer)   /*initiat
             //json_object_put(time_req_object);
             //json_object_put(time_req_object);
         }
-
+		
     }
 #if 0
     json_object_object_foreach(time_req_object, key, val) {
@@ -496,6 +624,8 @@ int get_time_request_json(CLASS(json_interface) *arg, char *pbuffer)   /*initiat
  *				 -1: init failed
  *
 *******************************************************************************/
+static int delete_json_interface(CLASS(json_interface) *arg);
+
 int init_json_interface (CLASS(json_interface) *arg)
 {
 
@@ -505,52 +635,47 @@ int init_json_interface (CLASS(json_interface) *arg)
 
     arg->get_time_request_json = get_time_request_json;
     arg->get_location_upload_json = get_location_upload_json;
-	arg->get_health_upload_json = get_health_upload_json;
-
-    NEW(arg->internet_interface,  int_comp);
-    NEW(arg->sha1_interface , hmac_sha1);
-    arg->internet_interface->get_mac(arg->internet_interface, mac, &lenth);
-
-    printf("mac adress = %s /n", mac);
-#if 0
-    printf("mac from int json = %s \n", mac);
-    json_tokener *tok;
-    json_object *my_string, *my_int, *my_object, *my_array;
-    json_object *new_obj;
-    int i;
-    MC_SET_DEBUG(1);
-    my_string = json_object_new_string("mike");
-    printf("my_string=%s\n", json_object_get_string(my_string));
-    printf("my_string.to_string()=%s\n", json_object_to_json_string(my_string));
-    //json_object_put(my_string);
-
-    my_object =  json_object_new_object();
-    json_object_object_add(my_object, "name", my_string);
-    json_object_object_add(my_object, "age", json_object_new_int(32));
-    printf("my_object.to_string()=%s\n", json_object_to_json_string(my_object));
-#endif
+    arg->get_health_upload_json = get_health_upload_json;
+    arg->deinit = delete_json_interface;
+	arg->set_location_inf = set_location_information;
+	arg->set_health_inf = set_health_information;	
+    /*initiate inheriented interface*/
+    NEW(arg->internet_interface, int_comp);
+    NEW(arg->sha1_interface, hmac_sha1);
+	NEW(arg->base_rtc, rtc_date);
+    arg->user_data = malloc(sizeof(struct cling_inf_upload_json_chain));
+	/*ckeck if malloc successfully*/
+    if(arg->user_data == NULL) {
+        goto FAILED;
+    }
+    bzero(arg->user_data, sizeof(struct cling_inf_upload_json_chain));
     return 0;
+FAILED:
+    free(arg->user_data);
+    return -1;
 }
 
 /******************************************************************************
- * FunctionName : delete_cling_inf_json
+ * FunctionName : delete_cling_health_inf_json
  * Description  : deinitiate time stamp object
  * Parameters   : pbuffer -- The received data from the server
 
  * Returns      : none
 *******************************************************************************/
 
-#if 0
-static int delete_cling_inf_json(CLASS(json_interface) *arg)
+#if 1
+static int delete_json_interface(CLASS(json_interface) *arg)
 {
     assert(NULL != arg);
     /*reinitiate global upload json request*/
     //upload_request = NULL;
+    DELETE(arg->internet_interface,  int_comp);
+    DELETE(arg->sha1_interface , hmac_sha1);
 
-    struct cling_inf_upload_json *cling_inf_data = ((struct cling_inf_upload_json*)(arg->user_data));
+    struct cling_inf_upload_json_chain *cling_health_inf_data = ((struct cling_inf_upload_json_chain*)(arg->user_data));
 
     /*free private data*/
-    free(cling_inf_data);
+    free(cling_health_inf_data);
 
     free(arg);
     return 0;

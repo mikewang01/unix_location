@@ -128,6 +128,20 @@ int get_ip(CLASS(int_comp) *arg, char *buffer, char *output_lenth) /*initiate ht
 
 }
 
+/******************************************************************************
+ * FunctionName : int  socket_recieved(void* env)
+ * Description  :data recieved function after data sended
+ * Parameters   : level : output level of pin
+ * Returns      : 0: init successfully
+ *				 -1: init failed
+ *
+*******************************************************************************/
+int deinit_int_comp(CLASS(int_comp) *arg) /*initiate http object*/
+{
+	assert(arg != NULL);
+	free(arg);
+
+}
 
 
 /******************************************************************************
@@ -143,6 +157,7 @@ int init_int_comp(CLASS(int_comp) *arg) /*initiate http object*/
 	assert(arg != NULL);
 	arg->get_mac = get_mac;
 	arg->get_ip =  get_ip;
+ 	arg->de_init =  deinit_int_comp;
 
 }
 

@@ -166,6 +166,22 @@ static int sha1_process_full(CLASS(hmac_sha1)*arg,  const char * key, unsigned i
                 unsigned char * output, unsigned int *output_length){
 	return HmacEncode("sha1", key, key_length, input, input_length, output, output_length);
 }
+/******************************************************************************
+ * FunctionName : deinit_hmac_sha1
+ * Description	: delete related merory used and reset object state 
+ * Parameters	: CLASS(hmac_sha1) *arg point to the struct need initailizing 
+ *					
+ * Returns		: 0   : initialzie successfully
+ *				  -1  : initilize failedly 	
+*******************************************************************************/
+#if 1/*for debugging purpose*/
+int deinit_hmac_sha1(CLASS(hmac_sha1) *arg)
+{
+
+	free(arg);
+	return 0;
+}
+#endif
 
 /******************************************************************************
  * FunctionName : init_hmac_sha1
@@ -176,14 +192,14 @@ static int sha1_process_full(CLASS(hmac_sha1)*arg,  const char * key, unsigned i
  *				  -1  : initilize failedly 	
 *******************************************************************************/
 #if 1/*for debugging purpose*/
-int 
-init_hmac_sha1(CLASS(hmac_sha1) *arg)
+int init_hmac_sha1(CLASS(hmac_sha1) *arg)
 {
 
 	assert(arg != NULL);
 	arg->process_full = sha1_process_full;
 	arg->base64_encode = hmac_sha1_base64_encode;
 	arg->check_sum = check_sum;
+	arg->de_init = deinit_hmac_sha1;
 	return 0;
 }
 #endif

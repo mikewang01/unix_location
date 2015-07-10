@@ -164,7 +164,7 @@ extern enum json_type json_object_get_type(struct json_object *obj);
  * @param obj the json_object instance
  * @returns a string in JSON format
  */
-extern const char* json_object_to_json_string(struct json_object *obj);
+extern const char* `(struct json_object *obj);
 
 /** Stringify object to json format
  * @param obj the json_object instance

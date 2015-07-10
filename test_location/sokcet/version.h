@@ -17,9 +17,9 @@
 //#define VERSION_TYPE      "b"
 #define VERSION_TYPE   	  "v"
 
-#if LOCATION_DEVICE
-#define device_type       45772
-#endif
+
+#define DEVICE_TYPE       45772
+
 
 
 #define ONLINE_UPGRADE    0
@@ -39,8 +39,8 @@
 
 #define BEACON_GET_VERSION(__x) do{\
 	if(__x != NULL){\
-		sprintf(iot_version,"%s%d.%d.%dt%d(%s)",VERSION_TYPE,BEACON_VERSION_MAJOR,\
-								  BEACON_VERSION_MINOR,BEACON_VERSION_REVISION,device_type,UPGRADE_FALG);\
+		sprintf(__x,"%s%d.%d.%dt%d(%s)",VERSION_TYPE,BEACON_VERSION_MAJOR,\
+								  BEACON_VERSION_MINOR,BEACON_VERSION_REVISION,DEVICE_TYPE, UPGRADE_FALG);\
 	 }\
 }while(0); 
 
