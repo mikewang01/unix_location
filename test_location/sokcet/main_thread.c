@@ -102,7 +102,7 @@ int main()
     int serial_pipe_read, serial_pipe_write;
     int socket_pipe_read, socket_pipe_write;
 	//get_mac(NULL, NULL, NULL);
-	json_test1();
+	//json_test1();
 	check_network_status ();
 	NEW(json_obj,json_interface);
 	/*get time syc json sucessfully*/
