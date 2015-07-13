@@ -21,6 +21,7 @@
 #include <sys/select.h>
 #include "serial_port.h"
 #include "config.h"
+#include <stdint.h>
 /*********************************************************************
 * MACROS
 */
@@ -45,6 +46,13 @@ void receive_one_char_callback(unsigned char rev_char);
 int register_serial_fd(int fd);
 int cling_uart_ipc_fd_register(unsigned int  fd);
 
+void cmd_process_callback(char cmd){
+	if(cmd == 0x02){
+		printf("time sync request recevied\n");
+		uint32_t time_stamp = time(NULL);
+		cling_u_data_send((char*)(&time_stamp), sizeof(time_stamp));
+	}
+}
 
 void *serial_thread(void *arg)
 {
@@ -53,6 +61,8 @@ void *serial_thread(void *arg)
 	struct timeval serial_timeout;
 	struct private_thread_para *serial_para = (struct private_thread_para*)(arg);
 
+	set_recieved_cmd_call_back(cmd_process_callback);
+	
 	unsigned char buffer[100];
 	
 	printf("serial_thread running\r\n");

@@ -249,7 +249,7 @@ static int  cling_data_recieved_poll(CLASS(cling_uart) *arg)
 int  cling_data_mac_pocess(void * buffer, int lenth)
 {
 
-    struct cling_inf_rev 	 inf_l;
+    struct cling_location_rev 	 inf_l;
 	struct cling_health_rev  inf_h;
 
 	

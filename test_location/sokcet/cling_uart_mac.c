@@ -117,7 +117,7 @@ void receive_one_char_callback(unsigned char rev_char)
 	RcvMsgBuff *para = &serial_buff;
 	//printf("\r\ndata=");
 	
-	  printf(":%02x",rev_char);
+	  //printf(":%02x",rev_char);
 #if 0
     MAC_SEND_BUFFER(&rev_char, 1);
 #endif

@@ -27,7 +27,7 @@ struct location_data{
 	char cling_mac[CLING_MAC_LENTH];/*cling mac adress*/
 	char cling_rssi[CLING_RSSI_LENTH];/*cling rssi number*/
 };
-struct cling_inf_rev{
+struct cling_location_rev{
 	char package_type;/*indicate current pakage type*/
 	struct location_data load;
 };

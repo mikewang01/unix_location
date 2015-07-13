@@ -1,0 +1,4 @@
+---- struct cling_inf_rev Matches (4 in 3 files) ----
+Cling_uart_cmd.c (sokcet):    struct cling_inf_rev 	 inf_l;
+Main_thread.c (sokcet):				struct cling_inf_rev *pserial_buffer = (struct cling_inf_rev *)buffer;
+Uart_protocol_cmd.h (sokcet):struct cling_inf_rev{

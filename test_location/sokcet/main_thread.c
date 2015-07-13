@@ -37,18 +37,26 @@
 #include "internet.h"
 #include "serial_port.h"
 #include "config.h"
+#include "uart_protocol_cmd.h"
 
 /*********************************************************************
 * MACROS
 */
 #define MAX_COM  2
 
+#define TANSFER_ENDIAN_16(X)                 ((((uint16_t)(X) & 0xff00) >> 8) |(((uint16_t)(X) & 0x00ff) << 8))
+#define TANSFER_ENDIAN_32(X)                 ((((uint32_t)(X) & 0xff000000) >> 24) | \
+                                                            (((uint32_t)(X) & 0x00ff0000) >> 8) | \
+                                                            (((uint32_t)(X) & 0x0000ff00) << 8) | \
+                                                            (((uint32_t)(X) & 0x000000ff) << 24))
+
+#define JSON_BUFFER_SIZE	4096
 /*********************************************************************
 * TYPEDEFS
 */
-struct process_property{
-	pthread_mutex_t property_mutex; /*used to protect  process property*/
-	char mac_adress[30];
+struct process_property {
+    pthread_mutex_t property_mutex; /*used to protect  process property*/
+    char mac_adress[30];
 } ;
 
 
@@ -82,64 +90,40 @@ static void *(*pthread_arry[])(void *)= {
  * Returns      : none
 *******************************************************************************/
 
-int get_mac(CLASS(int_comp) *arg, char *buffer, char *output_lenth); /*initiate http object*/
-
-int init_json_interface (CLASS(json_interface) *arg); /*initiate http object*/
-int HmacEncode(const char * algo,
-                const char * key, unsigned int key_length,
-                const char * input, unsigned int input_length,
-                unsigned char * output, unsigned int *output_length);
-int check_network_status ();
-
+/*initiate http object*/
 int main()
 {
 
     thread_t pid[MAX_COM];
     thread_t serid[MAX_COM];
     key_t key;
-	char pbuffer[2048];
+    char pbuffer[2048];
     struct s_msg in_msg_test;
     int serial_pipe_read, serial_pipe_write;
     int socket_pipe_read, socket_pipe_write;
-	//get_mac(NULL, NULL, NULL);
-	//json_test1();
-	check_network_status ();
-	NEW(json_obj,json_interface);
-	/*get time syc json sucessfully*/
-	json_obj->set_location_inf(json_obj, "ecling 123", "00:22:33:44", -100, time(NULL));
-	json_obj->set_location_inf(json_obj, "tcling 123", "00:22:33:44", -100, time(NULL));
-	
-	if(json_obj->get_location_upload_json(json_obj, pbuffer) == 0){
-		printf("get get_location_upload_json = %s\n", pbuffer);
-	}
-	if(json_obj->get_health_upload_json(json_obj, pbuffer) == 0){
-		printf("get get_location_upload_json = %s\n", pbuffer);
-	}else{
-		printf("get health json eror\n");
-	}
-	//static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer)
-#if 0
-	#define KEY  "5EHdd8_334dyUjjddleqH6YHHm"
-	#define TEXT "v1.0.2t45772(a)18:fe:34:9b:b4:85{\"action\":\"time\"}1429269133&blue=CLING E35931:32:33:34:35:36"
+    //get_mac(NULL, NULL, NULL);
+    json_test1();
+    check_network_status ();
+    NEW(json_obj,json_interface);
+    /*get time syc json sucessfully*/
+    json_obj->set_location_inf(json_obj, "ecling 123", "00:22:33:44", -100, time(NULL));
+    json_obj->set_location_inf(json_obj, "tcling 123", "00:22:33:44", -100, time(NULL));
+    struct health_data_inf health_temp = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18};
 
-	int  output_len=0;
-	
-	HmacEncode("sha1", KEY, strlen(KEY), TEXT, strlen(TEXT),pbuffer, &output_len);
-	printf("output lenth = %d\n\r", output_len);
-	
-	for(int i=0; i< output_len; i++){
-		//printf("output data = %d\n\r", i);
-		printf("0x%02x ", pbuffer[i]);
+    json_obj->set_health_inf(json_obj, health_temp, "mike", "123444567", time(NULL));
+    health_temp.date = 2;
+    json_obj->set_health_inf(json_obj, health_temp, "mike", "123444567", time(NULL));
 
-	}
-	printf("output finished\n");
-#endif
-	//init_json_interface (NULL); /*initiate http object*/
-//	while(1);
-    //json_test1(); 
-    //serial_test();
+    if(json_obj->get_location_upload_json(json_obj, pbuffer) == 0) {
+        printf("get get_location_upload_json = %s\n", pbuffer);
+    }
+    if(json_obj->get_health_upload_json(json_obj, pbuffer) == 0) {
+        printf("get get_location_upload_json = %s\n", pbuffer);
+    } else {
+        printf("get health json eror\n");
+    }
+
     printf("main thread\r\n");
-	
     for (int i = 1; i < MAX_COM+1 ; i++) {
         int pipe_fd[4];
         struct private_thread_para *t;
@@ -170,8 +154,9 @@ int main()
         //pthread_create(&serid[i], NULL, serial_proc, &server_env);
     }
 
-#if 0
-    printf("*********serial_pipe_read id =%d\n",serial_pipe_read );
+
+#if 1
+    printf("*********serial_pipe_read id =%d**********\n",serial_pipe_read );
     fd_set inputs;
     FD_ZERO(&inputs);
     FD_SET(serial_pipe_read, &inputs);
@@ -179,9 +164,11 @@ int main()
     int nread,result;
     char buffer[100];
     struct timeval temp;
-    temp.tv_sec = 10;
+    temp.tv_sec = 5;
 
-	
+    char location_json_buffer[JSON_BUFFER_SIZE];
+    char health_json_buffer[JSON_BUFFER_SIZE];
+
     for(;;) {
         //perror("com select timeout(((((((((\r\n");
         FD_ZERO(&inputs);
@@ -191,11 +178,21 @@ int main()
 
         switch(result) {
         case 0: //time out
-            temp.tv_sec = 10;
+            temp.tv_sec = 5;
             FD_ZERO(&inputs);
             FD_SET(serial_pipe_read, &inputs);
             perror("main thread wait timeout\r\n");
-			//write(serial_pipe_write, "12345", 5);
+            /*indicate there is location related data existed*/
+#if 1
+            if(json_obj->get_location_upload_json(json_obj, location_json_buffer) == 0) {
+                write(socket_pipe_write, location_json_buffer, strlen(location_json_buffer)+1);
+            }
+#endif
+            /*indicate there is location related data existed*/
+            if(json_obj->get_health_upload_json(json_obj, health_json_buffer) == 0) {
+                write(socket_pipe_write, health_json_buffer, strlen(health_json_buffer)+1);
+            }
+            //write(serial_pipe_write, "12345", 5);
             break;
         case -1:		 //error
             perror("com select timeout\r\n");
@@ -209,16 +206,62 @@ int main()
                 }
                 nread = read(serial_pipe_read, buffer, nread);
                 printf("main thread pipe read lenth =%d\n", nread);
-				
+#if 0
                 for(int i=0; i < nread ; i++) {
-                    // printf("main thread pipe read le\n")
+                    //printf("main thread pipe read le\n")
                     fprintf(stdout,"=%02x", buffer[i]);
                 }
-				printf("\n");
+#endif
+                struct cling_location_rev *pserial_buffer = (struct cling_location_rev *)buffer;
+
+                /*take use of bute packagetype to tell what kind of package it is*/
+                if(pserial_buffer->package_type == (char)CMD_LOCATION_TYPE) {
+                    printf("set location json!!\n");
+                    int ret = json_obj->set_location_inf(json_obj, pserial_buffer->load.cling_id, pserial_buffer->load.cling_mac, pserial_buffer->load.cling_rssi[0], time(NULL));
+					/*if location queue is full then send it*/
+					if (ret < 0 || ret == 1) {
+                        printf("location queque has been full\n");
+                        if(json_obj->get_location_upload_json(json_obj, location_json_buffer) == 0) {
+                            write(socket_pipe_write, location_json_buffer, strlen(location_json_buffer)+1);
+                        }
+                    } else {
+                        printf("location inf added suceefully\n");
+                    }
+                } else if(pserial_buffer->package_type == CMD_HEALTH_TYPE) {
+
+                    printf("set health json!!\n");
+                    struct cling_health_rev *pbuffer_health = (struct cling_health_rev *)buffer;
+                    struct health_data_inf a = {0};
+                    a.date = pbuffer_health->load.date;
+                    a.total_steps = TANSFER_ENDIAN_16(pbuffer_health->load.steps);
+                    a.total_distance = TANSFER_ENDIAN_16(pbuffer_health->load.distance);
+                    a.calories_total = TANSFER_ENDIAN_16(pbuffer_health->load.calories);
+                    a.sleep_total = TANSFER_ENDIAN_16(pbuffer_health->load.sleep_time);
+                    a.heart_rate = pbuffer_health->load.heart_rate;
+                    a.skin_temp = pbuffer_health->load.skin_temp;
+                    /*for thsre is no buffer in serial thread so get current timestamp as the time recieved this message*/
+                    a.beacon_timestamp = time(NULL);
+
+                    int ret = json_obj->set_health_inf(json_obj,a , "ECIG", pbuffer_health->load.cling_mac, time(NULL));
+                    if (ret < 0 || ret == 1) {
+                        printf("health queque has been full\n");
+                        /*indicate there is location related data existed*/
+                        if(json_obj->get_health_upload_json(json_obj, health_json_buffer) == 0) {
+                            write(socket_pipe_write, health_json_buffer, strlen(health_json_buffer)+1);
+                        }
+                    } else {
+                        printf("health inf added suceefully\n");
+                    }
+
+                }
+
+                //printf("\n");
                 /*write data to serial thread through pipe*/
-                write(serial_pipe_write, "12345", 5);
+                //write(serial_pipe_write, "12345", 5);
 
             }
+
+
 
             //buffer[nread] = 0;
             //printf("%s\r\n", buffer);
@@ -231,7 +274,7 @@ int main()
 #endif
 
 //while(1);
-	printf("main thread serial_pipe_write = %d\n", serial_pipe_write);
+    printf("main thread serial_pipe_write = %d\n", serial_pipe_write);
     char a[]="01234567891";
     for(;;) {
         write(socket_pipe_write,pbuffer,strlen(pbuffer)+1);
