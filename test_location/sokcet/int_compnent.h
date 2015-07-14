@@ -15,8 +15,8 @@
 DEF_CLASS(int_comp)
 	int (*init)    		(CLASS(int_comp)*); /*initiate http object*/
 	int (*de_init)    	(CLASS(int_comp)*); /*initiate http object*/
-	int (*get_mac)		(CLASS(int_comp)*, const char*, unsigned int*);/*delete  http object*/
-	int (*get_ip)		(CLASS(int_comp)*, const char*, unsigned int*);/*disconnect from server*/
+	int (*get_mac)		(CLASS(int_comp)*,  char*, unsigned int*);/*delete  http object*/
+	int (*get_ip)		(CLASS(int_comp)*,  char*, unsigned int*);/*disconnect from server*/
 	void *user_data;/*point to user private data*/
 END_DEF_CLASS(int_comp)
 

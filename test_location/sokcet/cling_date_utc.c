@@ -26,6 +26,7 @@
  */
 
 #include <stdio.h>
+#include<stdlib.h>
 #include <assert.h>
 #include "cling_date_utc.h"
 

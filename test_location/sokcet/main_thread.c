@@ -38,7 +38,7 @@
 #include "serial_port.h"
 #include "config.h"
 #include "uart_protocol_cmd.h"
-
+#include "user_interface.h"
 /*********************************************************************
 * MACROS
 */
@@ -50,7 +50,7 @@
                                                             (((uint32_t)(X) & 0x0000ff00) << 8) | \
                                                             (((uint32_t)(X) & 0x000000ff) << 24))
 
-#define JSON_BUFFER_SIZE	4096
+#define JSON_BUFFER_SIZE	4096*4
 /*********************************************************************
 * TYPEDEFS
 */
@@ -103,7 +103,7 @@ int main()
     int socket_pipe_read, socket_pipe_write;
     //get_mac(NULL, NULL, NULL);
     json_test1();
-    check_network_status ();
+    //check_network_status ();
     NEW(json_obj,json_interface);
     /*get time syc json sucessfully*/
     json_obj->set_location_inf(json_obj, "ecling 123", "00:22:33:44", -100, time(NULL));
@@ -163,9 +163,10 @@ int main()
 
     int nread,result;
     char buffer[100];
+	
     struct timeval temp;
-    temp.tv_sec = 5;
-
+	set_timeval(&temp, SERIAL_PIPE_TIMEOUT);
+		
     char location_json_buffer[JSON_BUFFER_SIZE];
     char health_json_buffer[JSON_BUFFER_SIZE];
 
@@ -178,10 +179,12 @@ int main()
 
         switch(result) {
         case 0: //time out
-            temp.tv_sec = 5;
+ 
             FD_ZERO(&inputs);
             FD_SET(serial_pipe_read, &inputs);
+			FD_SET(serial_pipe_read, &inputs);
             perror("main thread wait timeout\r\n");
+	 		set_timeval(&temp, SERIAL_PIPE_TIMEOUT);
             /*indicate there is location related data existed*/
 #if 1
             if(json_obj->get_location_upload_json(json_obj, location_json_buffer) == 0) {
@@ -218,8 +221,8 @@ int main()
                 if(pserial_buffer->package_type == (char)CMD_LOCATION_TYPE) {
                     printf("set location json!!\n");
                     int ret = json_obj->set_location_inf(json_obj, pserial_buffer->load.cling_id, pserial_buffer->load.cling_mac, pserial_buffer->load.cling_rssi[0], time(NULL));
-					/*if location queue is full then send it*/
-					if (ret < 0 || ret == 1) {
+                    /*if location queue is full then send it*/
+                    if (ret < 0 || ret == 1) {
                         printf("location queque has been full\n");
                         if(json_obj->get_location_upload_json(json_obj, location_json_buffer) == 0) {
                             write(socket_pipe_write, location_json_buffer, strlen(location_json_buffer)+1);
@@ -260,9 +263,6 @@ int main()
                 //write(serial_pipe_write, "12345", 5);
 
             }
-
-
-
             //buffer[nread] = 0;
             //printf("%s\r\n", buffer);
 #endif

@@ -3,6 +3,8 @@
 
 
 #include "oop_hal.h"
+
+
 /*INIDICATE DIFFRENT IN CMD LAYER*/
 enum uart_cmd_package_type{
 	CMD_LOCATION_TYPE,
@@ -33,28 +35,8 @@ struct cling_location_rev{
 };
 
 
-
-
-struct cling_inf_send{
-#ifndef UART_OLD_PROTOCAL
-	char package_type;/*indicate current pakage type*/
-#endif
-	char *ptr;
-};
-
-
-
-
-
-
-
-
-
-
-
 #pragma pack(push) 
 #pragma pack(1)	
-
 struct health_data{
 	char cling_mac[CLING_MAC_LENTH];/*cling mac adress*/
 	unsigned char null_align; /*for align used*/
@@ -88,6 +70,14 @@ struct cling_cmd_rev{
 };
 
 
+struct cling_inf_send{
+#ifndef UART_OLD_PROTOCAL
+	char package_type;/*indicate current pakage type*/
+#endif
+	char *ptr;
+};
+
+
 /*object prototype declaration*/
 DEF_CLASS(cling_uart)
 	int (*init)    	(CLASS(cling_uart) *arg); 			/*initiate uart object*/
@@ -102,8 +92,6 @@ DEF_CLASS(cling_uart)
 END_DEF_CLASS(cling_uart)
 
 int  cling_u_data_send(char *pinf, int lenth);
-
-
 
 #endif
 

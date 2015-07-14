@@ -12,6 +12,9 @@
 #include "uart_protocol_mac.h"
 #include "stdio.h"
 #include "assert.h"
+#include <unistd.h> 
+
+
 /*********************************************************************
 * MACROS
 */
@@ -278,7 +281,7 @@ int  cling_data_mac_pocess(void * buffer, int lenth)
             (inf_h.load) =  *((struct health_data*)buffer);
             /*post cling device information from ble device to task registered*/
             if (ipc_fd > 0) {
-				printf("IPC SENDED!!!!!!\N");
+				printf("IPC SENDED!!!!!!\n");
                 /*buffer gonna be freed in user task*/
 				IPC_SEND(&inf_h, sizeof(inf_h));
 

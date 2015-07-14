@@ -12,19 +12,18 @@
 #define __CONFIG__H__
 #include "oop_hal.h"
 
-//fd[0]:read,fd[1]:write
-struct private_thread_para {
-    int tid;	/*store the pthread id of child thread*/
-	int fd;
-	int fd_max; /*record max fd for selecting function*/
-    struct pipe {
-        int pipe_read_fd; /*data read pipe fd*/
-        int pipe_write_fd;/*data write pipe fd*/
-    } pipe_father_thread[1],pipe_child_thread[1];
-    void *usr_data;
-};
+/*internet related config*/
+#define HICLING_DOMAIN	"101.231.188.66"
+#define HICLING_TIME_PATH "/time"
+#define HICLING_HEALTH_PATH "/data/day"
+#define HICLING_SERVER_PORT 9992//8086
+#define INTERNET_TIMEOUT  1000 //ms
 
-#define MAX(x,y) ((x)>(y)?(x):(y)) 
+/*serial pipe process related*/
+#define SERIAL_PIPE_TIMEOUT   10000 //ms
+#define JSON_MAX_BUFFER_LENTH 8
+
+
 
 
 #endif

@@ -41,7 +41,9 @@ int mac_send_payload(char *ppayload, int lenth);
 void set_recieved_cmd_call_back(void (*callback)(char));
 /*maintain serial send list*/
 int mac_sendlist_mantain_demon();
-
+int register_write_function(int (*write)(char* , unsigned int ));
+void receive_one_char_callback(unsigned char rev_char);
+int register_serial_fd(int fd);
 
 #endif
 

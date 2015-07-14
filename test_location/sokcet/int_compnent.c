@@ -49,7 +49,7 @@
  *				 -1: init failed
  *
 *******************************************************************************/
-int get_mac(CLASS(int_comp) *arg, char *buffer, char *output_lenth) /*initiate http object*/
+int get_mac(CLASS(int_comp) *arg, char *buffer, unsigned int *output_lenth) /*initiate http object*/
 {
     struct sockaddr_in *addr;
     struct ifreq ifr;
@@ -100,7 +100,7 @@ int get_mac(CLASS(int_comp) *arg, char *buffer, char *output_lenth) /*initiate h
  *				 -1: init failed
  *
 *******************************************************************************/
-int get_ip(CLASS(int_comp) *arg, char *buffer, char *output_lenth) /*initiate http object*/
+int get_ip(CLASS(int_comp) *arg, char *buffer, unsigned int *output_lenth) /*initiate http object*/
 {
     struct sockaddr_in *addr;
     struct ifreq ifr;

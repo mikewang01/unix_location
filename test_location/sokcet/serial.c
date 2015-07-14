@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <sys/select.h>
 #include "serial_port.h"
+#include <unistd.h>
 
 /*********************************************************************
 * MACROS

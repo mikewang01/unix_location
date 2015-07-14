@@ -21,6 +21,7 @@
 #include <openssl/buffer.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <strings.h>
 
 /*********************************************************************
 * MACROS

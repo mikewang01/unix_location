@@ -14,7 +14,12 @@
 #include "stdio.h"
 #include "assert.h"
 #include "serial_port.h"
- 
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h> 
+#include <errno.h>
+
+
 
 #define PACKAGE_HEADER_SYMBOL    0X7D
 #define PACKAGE_TRANSFER_SYMBOL  0X7F
@@ -32,10 +37,18 @@
 #define LOCK_SEMAPHORE(__X) 	 (__X =  LOCKED)
 #define UNLOCK_SEMAPHORE(__x)	 (__x = UNLOCKED)
 
-
+#if 0
 #define  MAC_SEND_BUFFER(__X, __Y) do{\
 	if(reg_serial_fd > 0){\
-		write(reg_serial_fd, __X,__Y);\
+		if(write(reg_serial_fd, __X,__Y) < 0);\
+			printf("serial write error numbeer =%d\n",errno);\
+	}\
+}while(0)
+#endif
+
+#define  MAC_SEND_BUFFER(__X, __Y) do{\
+	if(mac_send_data != NULL){\
+		mac_send_data(__X, __Y);\
 	}\
 }while(0)
 
@@ -81,6 +94,9 @@ enum package_type {
 */
 
 static int reg_serial_fd = 0;
+/*send data call back function*/
+static int  (*mac_send_data)(char*, unsigned int) = NULL;
+
 static RcvMsgBuff serial_buff;
 
 /*recieve fifo related pointer*/
@@ -563,6 +579,7 @@ static int send_package_assemble(struct mac_layer_payload_send *payload_temp, en
     if (type == PACKAGE_ACK) {
         char ack_buffer[] = {PACKAGE_HEADER_SYMBOL, PACKAGE_ACK, PACKAGE_END_SYMBOL};
         /*send ddta to client*/
+		
         MAC_SEND_BUFFER(ack_buffer, sizeof(ack_buffer));
     } else if (type == PACKAGE_DATA || type == PACKAGE_CMD) {
         char data_buffer[2048];
@@ -647,6 +664,18 @@ int register_serial_fd(int fd)
    reg_serial_fd = fd;
 	return 0;
 }
-
+/******************************************************************************
+ * FunctionName :register_write_function
+ * Description  : regiter serial write callback
+ * Parameters   : write: write call back function
+ * Returns      : 0: sucess
+ *				 -1: error
+*******************************************************************************/
+int register_write_function(int (*write)(char* , unsigned int ))
+{
+	
+	mac_send_data = write;
+	return 0;
+}
 
 

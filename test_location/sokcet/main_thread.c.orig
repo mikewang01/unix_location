@@ -102,7 +102,7 @@ int main()
     int serial_pipe_read, serial_pipe_write;
     int socket_pipe_read, socket_pipe_write;
     //get_mac(NULL, NULL, NULL);
-    //json_test1();
+    json_test1();
     check_network_status ();
     NEW(json_obj,json_interface);
     /*get time syc json sucessfully*/
@@ -218,11 +218,12 @@ int main()
                 if(pserial_buffer->package_type == (char)CMD_LOCATION_TYPE) {
                     printf("set location json!!\n");
                     int ret = json_obj->set_location_inf(json_obj, pserial_buffer->load.cling_id, pserial_buffer->load.cling_mac, pserial_buffer->load.cling_rssi[0], time(NULL));
-                    if (ret < 0 || ret == 1) {
+					/*if location queue is full then send it*/
+					if (ret < 0 || ret == 1) {
                         printf("location queque has been full\n");
-						 if(json_obj->get_location_upload_json(json_obj, location_json_buffer) == 0) {
-             			   write(socket_pipe_write, location_json_buffer, strlen(location_json_buffer)+1);
-            			}
+                        if(json_obj->get_location_upload_json(json_obj, location_json_buffer) == 0) {
+                            write(socket_pipe_write, location_json_buffer, strlen(location_json_buffer)+1);
+                        }
                     } else {
                         printf("location inf added suceefully\n");
                     }
@@ -244,10 +245,10 @@ int main()
                     int ret = json_obj->set_health_inf(json_obj,a , "ECIG", pbuffer_health->load.cling_mac, time(NULL));
                     if (ret < 0 || ret == 1) {
                         printf("health queque has been full\n");
-						  /*indicate there is location related data existed*/
-            if(json_obj->get_health_upload_json(json_obj, health_json_buffer) == 0) {
-                write(socket_pipe_write, health_json_buffer, strlen(health_json_buffer)+1);
-            }
+                        /*indicate there is location related data existed*/
+                        if(json_obj->get_health_upload_json(json_obj, health_json_buffer) == 0) {
+                            write(socket_pipe_write, health_json_buffer, strlen(health_json_buffer)+1);
+                        }
                     } else {
                         printf("health inf added suceefully\n");
                     }
@@ -259,9 +260,6 @@ int main()
                 //write(serial_pipe_write, "12345", 5);
 
             }
-
-
-
             //buffer[nread] = 0;
             //printf("%s\r\n", buffer);
 #endif

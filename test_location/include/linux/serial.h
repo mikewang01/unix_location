@@ -200,5 +200,4 @@ struct serial_rs485 {
 	__u32	padding[5];		/* Memory is cheap, new structs
 					   are a royal PITA .. */
 };
-
 #endif /* _LINUX_SERIAL_H */

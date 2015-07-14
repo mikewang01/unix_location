@@ -21,7 +21,8 @@
 /*********************************************************************
 * MACROS
 */
-#ifndef is_error(ptr)
+
+#ifndef is_error
 
 #define is_error(ptr) (ptr == NULL)
 

@@ -11,6 +11,8 @@
 *******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -21,7 +23,8 @@
 #include <sys/select.h>
 #include "serial_port.h"
 #include "config.h"
-#include <stdint.h>
+#include "user_interface.h"
+
 /*********************************************************************
 * MACROS
 */
@@ -42,8 +45,17 @@ extern "C" {
 /*********************************************************************
 * LOCAL VARIABLES
 */
-void receive_one_char_callback(unsigned char rev_char);
-int register_serial_fd(int fd);
+static struct private_thread_para *serial_para;
+
+/******************************************************************************
+* FunctionName :register_write_function
+* Description  : regiter serial write callback
+* Parameters   : write: write call back function
+* Returns	   : 0: sucess
+*				 -1: error
+*******************************************************************************/
+
+
 int cling_uart_ipc_fd_register(unsigned int  fd);
 
 void cmd_process_callback(char cmd){
@@ -53,16 +65,34 @@ void cmd_process_callback(char cmd){
 		cling_u_data_send((char*)(&time_stamp), sizeof(time_stamp));
 	}
 }
+/******************************************************************************
+* FunctionName : serial_write_callback
+* Description  : serial write call back function for maclayer
+* Parameters   : write: write call back function
+* Returns	   : 0: sucess
+*				 -1: error
+*******************************************************************************/
 
+int serial_write_callback(char *pbuffer, unsigned int lenth){
+	if(write(serial_para->fd, pbuffer, lenth) < 0);{
+		printf("serial write error numbeer =%d\n",errno);
+	}
+
+}
+/******************************************************************************
+* FunctionName : serial_thread
+* Description  : regiter serial write callback
+* Parameters   : write: write call back function
+* Returns      : 0: sucess
+*				 -1: error
+*******************************************************************************/
 void *serial_thread(void *arg)
 {
     int fd, nread, result ,iread;
 	fd_set inputs,outputs;
 	struct timeval serial_timeout;
-	struct private_thread_para *serial_para = (struct private_thread_para*)(arg);
-
+	serial_para = (struct private_thread_para*)(arg);
 	set_recieved_cmd_call_back(cmd_process_callback);
-	
 	unsigned char buffer[100];
 	
 	printf("serial_thread running\r\n");
@@ -76,7 +106,6 @@ void *serial_thread(void *arg)
 	serial_para->fd = fd;
 	/*find the max descriptor*/
 	serial_para->fd_max = MAX(serial_para->fd, serial_para->fd_max);
-	
 	printf("serial_thread id = %d\r\n", serial_para->fd);
 	printf("serial_parent write id = %d\r\n", serial_para->pipe_father_thread[0].pipe_write_fd);
 
@@ -88,9 +117,10 @@ void *serial_thread(void *arg)
 	FD_SET(serial_para->pipe_father_thread->pipe_write_fd, &outputs);
 
 	/*mac layer serial device fd*/
-	register_serial_fd(fd);
+	register_write_function(serial_write_callback);
 	/*cmd layer piepe ipc device fd*/
 	cling_uart_ipc_fd_register(serial_para->pipe_father_thread->pipe_write_fd);
+	
     for(;;) {
 
         result = select(serial_para->fd_max + 1, &inputs, NULL , (fd_set *)NULL, &serial_timeout);
@@ -106,7 +136,9 @@ void *serial_thread(void *arg)
         	//perror("serial select timeout\r\n");
 			break;
         case -1:		 //error
-            return result;
+        	printf("serial thread exit -1\n");
+            exit(result);
+			break;
         default:
             if(FD_ISSET(serial_para->fd,&inputs)) {
                 ioctl(fd, FIONREAD, &iread);
@@ -128,8 +160,10 @@ void *serial_thread(void *arg)
 				printf("serial data recieved\r\n");
 	 			cling_u_data_send(buffer, nread);
 			}else {
-                return -1;
+				printf("serial thread exit -2\n");
+                exit(-1);
             }
+			break;
         }//end of switch
 
     }

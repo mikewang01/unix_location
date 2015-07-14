@@ -28,6 +28,8 @@
 #include <json.h>
 #include <json_tokener.h>
 #include <string.h>
+#include <strings.h>
+#include "config.h"
 #include "internet.h"
 #include "json_test.h"
 #include "uart_protocol_cmd.h"
@@ -48,7 +50,7 @@
 #define JOSN_CLING_BTRSSI_SIZE	1
 
 
-#define CLING_INF_LENTH_LIMITATION  8
+#define CLING_INF_LENTH_LIMITATION  JSON_MAX_BUFFER_LENTH
 
 #define  CLING_SCAN_DATA_RANDOMNUM  18459
 
@@ -124,8 +126,7 @@ struct cling_inf_upload_json_chain {
 #if 1
 static int set_health_information(CLASS(json_interface) *arg,struct health_data_inf health, char *pdev_id, char *pdev_mac, uint32_t time_stamp)
 {
-#define CLING_DEVICE_ID_LENTH 	10
-#define CLING_DEVICE_MAC_LENTH	6
+#define CLING_DEVICE_ID_LENTH 	4
     assert((NULL != pdev_id) && (NULL != pdev_mac));
     /*malloc corresponed dparameter buffer*/
     struct cling_inf_upload_json_chain *cling_health_inf_data = ((struct cling_inf_upload_json_chain*)(arg->user_data));
@@ -207,7 +208,8 @@ int get_rid_of_quotation(char *pbuffer, int lenth) /*initiate http object*/
     }
     temp[i] = '\0';
     //printf("i = %d \t lenth = %d, %s\n",i,lenth, temp);
-    return strcpy(pbuffer, temp);
+    strcpy(pbuffer, temp);
+	return 0;
 }
 
 
@@ -224,8 +226,6 @@ int get_rid_of_quotation(char *pbuffer, int lenth) /*initiate http object*/
 #if 1
 int set_location_information(CLASS(json_interface) *arg, char *pdev_id, char *pdev_mac, char rssi, uint32_t time_stamp)
 {
-#define CLING_DEVICE_ID_LENTH 	4
-#define CLING_DEVICE_MAC_LENTH	6
     assert((NULL != pdev_id) && (NULL != pdev_mac));
     /*malloc corresponed dparameter buffer*/
     struct cling_inf_upload_json_chain *cling_location_inf_data = ((struct cling_inf_upload_json_chain*)(arg->user_data));
@@ -255,7 +255,10 @@ int set_location_information(CLASS(json_interface) *arg, char *pdev_id, char *pd
         assert(NULL != p);
         /*one more new member has been added to list*/
         cling_location_inf_data->cling_location_inf_chain_lenth++;
-        p->pnext = NULL;
+
+		printf("cling_location_inf_data->cling_location_inf_chain_lenth = %d\n", cling_location_inf_data->cling_location_inf_chain_lenth);
+
+		p->pnext = NULL;
         memcpy((char *)(p->btid), pdev_id, CLING_DEVICE_ID_LENTH);
         p->btid[CLING_DEVICE_ID_LENTH] = 0;
 
@@ -275,6 +278,7 @@ int set_location_information(CLASS(json_interface) *arg, char *pdev_id, char *pd
     if (cling_location_inf_data->cling_location_inf_chain_lenth > CLING_INF_LENTH_LIMITATION) {
         return 1;
     }
+	return 0;
 
 }
 #endif
@@ -393,7 +397,7 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
                 if(json_object_object_get_ex(health_json_body, "request_body", &value) ==  TRUE) {
                     uint16_t checksum = 0;
                     value = health_data_array;
-                    char *s = json_object_to_json_string(value);
+                    char *s = (char*)json_object_to_json_string(value);
                     printf("health json_object_to_json_string = %s\n", s);
                     //*(s + strlen(s) - 1) = 0;
                     //printf("json_object_to_json_string(value)= %s\n",s+1);
@@ -418,8 +422,8 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
     char sha1_output[100], sha1_encode64[100];
     int  sha1_output_lenth, sha1_encode64_lenth;
     /*peocess sha1 encode process*/
-    arg->sha1_interface->process_full(arg, HMAC_SHA1_KEY, strlen(HMAC_SHA1_KEY), enpryption_text, strlen(enpryption_text),sha1_output, &sha1_output_lenth);
-    arg->sha1_interface->base64_encode(arg, sha1_output, sha1_output_lenth, sha1_encode64, 100);
+    arg->sha1_interface->process_full(arg->sha1_interface, HMAC_SHA1_KEY, strlen(HMAC_SHA1_KEY), enpryption_text, strlen(enpryption_text),sha1_output, &sha1_output_lenth);
+    arg->sha1_interface->base64_encode(arg->sha1_interface, sha1_output, sha1_output_lenth, sha1_encode64, 100);
     sha1_output[sha1_output_lenth + 1] = 0;
 
     printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
@@ -558,8 +562,8 @@ static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer) /
     char sha1_output[100], sha1_encode64[100];
     int  sha1_output_lenth, sha1_encode64_lenth;
     /*peocess sha1 encode process*/
-    arg->sha1_interface->process_full(arg, HMAC_SHA1_KEY, strlen(HMAC_SHA1_KEY), enpryption_text, strlen(enpryption_text),sha1_output, &sha1_output_lenth);
-    arg->sha1_interface->base64_encode(arg, sha1_output, sha1_output_lenth, sha1_encode64, 100);
+    arg->sha1_interface->process_full(arg->sha1_interface, HMAC_SHA1_KEY, strlen(HMAC_SHA1_KEY), enpryption_text, strlen(enpryption_text),sha1_output, &sha1_output_lenth);
+    arg->sha1_interface->base64_encode(arg->sha1_interface, sha1_output, sha1_output_lenth, sha1_encode64, 100);
     sha1_output[sha1_output_lenth + 1] = 0;
 
     printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
@@ -646,8 +650,8 @@ int get_time_request_json(CLASS(json_interface) *arg, char *pbuffer)   /*initiat
     char sha1_output[100], sha1_encode64[100];
     int  sha1_output_lenth, sha1_encode64_lenth;
     /*peocess sha1 encode process*/
-    arg->sha1_interface->process_full(arg, HMAC_SHA1_KEY, strlen(HMAC_SHA1_KEY), pbuffer, strlen(pbuffer),sha1_output, &sha1_output_lenth);
-    arg->sha1_interface->base64_encode(arg, sha1_output, sha1_output_lenth, sha1_encode64, 100);
+    arg->sha1_interface->process_full(arg->sha1_interface, HMAC_SHA1_KEY, strlen(HMAC_SHA1_KEY), pbuffer, strlen(pbuffer),sha1_output, &sha1_output_lenth);
+    arg->sha1_interface->base64_encode(arg->sha1_interface, sha1_output, sha1_output_lenth, sha1_encode64, 100);
     sha1_output[sha1_output_lenth + 1] = 0;
 
     printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
