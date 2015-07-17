@@ -1,7 +1,9 @@
----- errorno Matches (6 in 2 files) ----
-Cling_uart_mac.c (sokcet):			perror("serial write error numbeer =%d\n",errorno);\
-Etip.h (include):  int errorno;
-Etip.h (include):    : message(msg), errorno (err)
-Etip.h (include):    : message(msg), errorno (E_SYSTEM_ERROR)
-Etip.h (include):    errorno = rhs.errorno;
-Etip.h (include):    : message(rhs.message), errorno(rhs.errorno)
+---- malloc Matches (8 in 0 files) ----
+Json_test.c (sokcet):    /*malloc corresponed dparameter buffer*/
+Json_test.c (sokcet):            cling_health_inf_data->pinf_h = (struct cling_health_inf*)malloc(sizeof(struct cling_health_inf));
+Json_test.c (sokcet):            p->pnext =  (struct cling_health_inf*)malloc(sizeof(struct cling_health_inf));
+Json_test.c (sokcet):    /*malloc corresponed dparameter buffer*/
+Json_test.c (sokcet):            cling_location_inf_data->pinf_l = (struct cling_location_inf*)malloc(sizeof(struct cling_location_inf));
+Json_test.c (sokcet):            p->pnext =  (struct cling_location_inf*)malloc(sizeof(struct cling_location_inf));
+Json_test.c (sokcet):    arg->user_data = malloc(sizeof(struct cling_inf_upload_json_chain));
+Json_test.c (sokcet):    /*ckeck if malloc successfully*/

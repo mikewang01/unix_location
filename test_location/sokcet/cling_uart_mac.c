@@ -319,11 +319,13 @@ static int add_payload2revlist(unsigned char *pbuffer, int size)
     if (IS_SEMAPHORE_LOCKED(rev_fifo_semphore)) {
         return -1;
     }
-
+#if 0
 	printf("\r\ndata=");
 	for(int i =0;i< size ;i++){
 	  printf(":%02x",pbuffer[i]);
 	}
+#endif
+
     /*enter critical section so that this is a atom acess*/
     LOCK_SEMAPHORE(rev_fifo_semphore);
 	cling_data_mac_pocess(pbuffer, size);

@@ -92,6 +92,7 @@ DEF_CLASS(cling_uart)
 END_DEF_CLASS(cling_uart)
 
 int  cling_u_data_send(char *pinf, int lenth);
+int  set_cling_uart_cmdlayer_revcallback(int (*callback)(char*, unsigned int));
 
 #endif
 

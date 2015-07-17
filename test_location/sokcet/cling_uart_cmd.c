@@ -37,8 +37,7 @@ struct cling_uart_private_data {
 * static VARIABLES
 */
 CLASS(cling_uart) *this = NULL;
-
-
+static int  (*cmd_layer_revcallback)(char*, unsigned int) = NULL;
 /*********************************************************************
 * EXTERNAL VARIABLES
 */
@@ -54,7 +53,6 @@ static int cling_uart_taskid_register(CLASS(cling_uart) *arg, unsigned int short
 static int cling_data_send(CLASS(cling_uart) *arg, char *pinf, int lenth);
 static int enable_recieving(CLASS(cling_uart) *arg);
 static int disable_recieving(CLASS(cling_uart) *arg);
-static void cling_cmd_rev_callback(char cmd);
 
 /******************************************************************************
  * FunctionName : init_cling_uart
@@ -192,7 +190,7 @@ static int cling_uart_taskid_register(CLASS(cling_uart) *arg, unsigned int short
 #endif
 
 /******************************************************************************
- * FunctionName : uart_taskid_register
+ * FunctionName : cling_uart_ipc_fd_register
  * Description  : internal used to register specific taskdi passed over here
  * Parameters   : arg -- object pointer
  *				  task_id -- task-id who gonna recieve message
@@ -212,6 +210,22 @@ int cling_uart_ipc_fd_register(unsigned int  fd)
 
 }
 #endif
+/******************************************************************************
+ * FunctionName : cling_uart_set_cmd_revcallback
+ * Description  : set cmd callback function
+ * Parameters   : callback: uart cmd recievie function
+ *				  
+ * Returns      : 0 sucessfully
+ 				  -1 error
+*******************************************************************************/
+
+#if 1
+int set_cling_uart_cmdlayer_revcallback(int (*callback)(char*, unsigned int))
+{
+ 	cmd_layer_revcallback = callback;
+	return 0;
+}
+#endif
 
 
 /******************************************************************************
@@ -220,12 +234,14 @@ int cling_uart_ipc_fd_register(unsigned int  fd)
  * Parameters   : none
  * Returns      : none
 *******************************************************************************/
+#if 0
 static void  cling_cmd_rev_callback(char cmd)
 {
     /*malloc corresponed dparameter buffer*/
     struct cling_uart_private_data *private_data = (struct cling_uart_private_data*)(this->user_data);
 
 }
+#endif
 
 /******************************************************************************
  * FunctionName : cling_data_recieved_poll
@@ -264,14 +280,19 @@ int  cling_data_mac_pocess(void * buffer, int lenth)
 			(inf_l.load) = *((struct location_data*) buffer);
 			printf("location data lenth = %d\n", sizeof(inf_l.load));				
             /*post cling device information from ble device to task registered*/
+			if(cmd_layer_revcallback != NULL){
+				cmd_layer_revcallback((char*)&inf_l, sizeof(inf_l));
+			}
+#if 0
             if (ipc_fd > 0) {
 				IPC_SEND(&inf_l, sizeof(inf_l));
-                /*buffer gonna be freed in user task*/
+  	           /*buffer gonna be freed in user task*/
 
             } else {
                 /*release cmd data ,because there is no task  gonna accept and release this message*/
   
             }
+#endif
 
         } else if (lenth == sizeof(inf_h.load)) {
 			
@@ -280,6 +301,7 @@ int  cling_data_mac_pocess(void * buffer, int lenth)
             //CLING_DEBUG("cling_health_rev recieved\n");
             (inf_h.load) =  *((struct health_data*)buffer);
             /*post cling device information from ble device to task registered*/
+#if 0
             if (ipc_fd > 0) {
 				printf("IPC SENDED!!!!!!\n");
                 /*buffer gonna be freed in user task*/
@@ -288,6 +310,10 @@ int  cling_data_mac_pocess(void * buffer, int lenth)
             } else {
                 /*release cmd data ,because there is no task  gonna accept and release this message*/
             }
+#endif
+			if(cmd_layer_revcallback != NULL){
+				cmd_layer_revcallback((char*)&inf_h, sizeof(inf_h));
+			}
         }
 
 

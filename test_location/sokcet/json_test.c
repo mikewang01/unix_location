@@ -435,7 +435,7 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
     //printf("my_object.to_string()=%s\n", pbuffer);
     sprintf(pbuffer, "%s", json_object_to_json_string(health_json_body));
     /*free memory occupid by json lib*/
-    while ((json_object_put(health_json_body) != 1) &&	(json_object_put(health_data_array) != 1)) {
+    while ((json_object_put(health_json_body) != 1) ||	(json_object_put(health_data_array) != 1)) {
         printf("health_json_body json object freed failed\n");
     }
 #endif

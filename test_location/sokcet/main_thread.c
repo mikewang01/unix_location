@@ -113,15 +113,16 @@ int main()
     json_obj->set_health_inf(json_obj, health_temp, "mike", "123444567", time(NULL));
     health_temp.date = 2;
     json_obj->set_health_inf(json_obj, health_temp, "mike", "123444567", time(NULL));
-
+#if 1
     if(json_obj->get_location_upload_json(json_obj, pbuffer) == 0) {
         printf("get get_location_upload_json = %s\n", pbuffer);
     }
     if(json_obj->get_health_upload_json(json_obj, pbuffer) == 0) {
-        printf("get get_location_upload_json = %s\n", pbuffer);
+        printf("get get_health_upload_json = %s\n", pbuffer);
     } else {
         printf("get health json eror\n");
     }
+#endif
 
     printf("main thread\r\n");
     for (int i = 1; i < MAX_COM+1 ; i++) {

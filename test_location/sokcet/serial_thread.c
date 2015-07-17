@@ -57,7 +57,6 @@ static struct private_thread_para *serial_para;
 
 
 int cling_uart_ipc_fd_register(unsigned int  fd);
-
 void cmd_process_callback(char cmd){
 	if(cmd == 0x02){
 		printf("time sync request recevied\n");
@@ -65,6 +64,7 @@ void cmd_process_callback(char cmd){
 		cling_u_data_send((char*)(&time_stamp), sizeof(time_stamp));
 	}
 }
+
 /******************************************************************************
 * FunctionName : serial_write_callback
 * Description  : serial write call back function for maclayer
@@ -74,11 +74,42 @@ void cmd_process_callback(char cmd){
 *******************************************************************************/
 
 int serial_write_callback(char *pbuffer, unsigned int lenth){
+
+	int flag =  fcntl(serial_para->fd,  F_GETFL, 0);
+
+	if(flag < 0){
+		perror("serial write callback get fd flag failed\n");
+		return -1;
+	}
+	 if(fcntl(serial_para->fd,  F_SETFL, flag&(~(O_NDELAY|O_NONBLOCK))) < 0){
+		perror("serial write callback set fd flag failed\n");
+		return -1;
+	 }
+	
 	if(write(serial_para->fd, pbuffer, lenth) < 0);{
 		printf("serial write error numbeer =%d\n",errno);
 	}
 
+	/*restore serial flag*/
+	if(fcntl(serial_para->fd,  F_SETFL, flag) < 0){
+	perror("serial write callback set fd flag failed\n");
+	return -1;
+	 }
+
 }
+
+/******************************************************************************
+* FunctionName : cmdlayer_revcallback
+* Description  : cmdlayer_revcallback
+* Parameters   : write: write call back function
+* Returns	   : 0: sucess
+*				 -1: error
+*******************************************************************************/
+int cmdlayer_revcallback(char *pbuffer, unsigned int lenth){
+
+	write(serial_para->pipe_father_thread->pipe_write_fd, pbuffer, lenth);
+}
+
 /******************************************************************************
 * FunctionName : serial_thread
 * Description  : regiter serial write callback
@@ -119,8 +150,8 @@ void *serial_thread(void *arg)
 	/*mac layer serial device fd*/
 	register_write_function(serial_write_callback);
 	/*cmd layer piepe ipc device fd*/
-	cling_uart_ipc_fd_register(serial_para->pipe_father_thread->pipe_write_fd);
-	
+	//cling_uart_ipc_fd_register(serial_para->pipe_father_thread->pipe_write_fd);
+	set_cling_uart_cmdlayer_revcallback(cmdlayer_revcallback);
     for(;;) {
 
         result = select(serial_para->fd_max + 1, &inputs, NULL , (fd_set *)NULL, &serial_timeout);
