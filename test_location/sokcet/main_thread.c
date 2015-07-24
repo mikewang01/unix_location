@@ -1,12 +1,13 @@
+
 /******************************************************************************
- * Copyright 2013-2014 Espressif Systems (Wuxi)
+ * Copyright 2013-2014 hicling Systems (mikewang)
  *
- * FileName: user_webserver.c
+ * FileName: main thread.c
  *
- * Description: The web server mode configration.
- *              Check your hardware connection with the host while use this mode.
+ * Description: mian thead to manage data flow.
+ *              
  * Modification history:
- *     2014/3/12, v1.0 create this file.
+ *     2015/6/12, v1.0 create this file.
 *******************************************************************************/
 
 #include <netdb.h>
@@ -59,13 +60,22 @@ struct process_property {
     char mac_adress[30];
 } ;
 
+/*used to record file descrptor for main thread*/
+union thread_fd_record{
+	struct {
+		struct pipe_private serial_pipe;
+		struct pipe_private socket_pipe; /*serial fd used to communicate with serial thread*/ 
+	}pipe_fd;
+	struct pipe_private t[MAX_COM];
+
+};
 
 /*********************************************************************
 * GLOBAL VARIABLES
 */
 /*set to 1 to open the key trigger function */
 
-int json_test1(void);
+int  json_test1(void);
 void serial_test(void);
 void *serial_thread(void *arg);
 static CLASS(json_interface) *json_obj;
@@ -94,17 +104,18 @@ static void *(*pthread_arry[])(void *)= {
 int main()
 {
 
-    thread_t pid[MAX_COM];
-    thread_t serid[MAX_COM];
+    pthread_t pid[MAX_COM];
+    pthread_t serid[MAX_COM];
     key_t key;
     char pbuffer[2048];
     struct s_msg in_msg_test;
-    int serial_pipe_read, serial_pipe_write;
-    int socket_pipe_read, socket_pipe_write;
-    //get_mac(NULL, NULL, NULL);
+	union thread_fd_record fd_record;
+#if 0 /*json official test debug*/
     json_test1();
-    //check_network_status ();
+#endif
     NEW(json_obj,json_interface);
+
+#if 0/*for locatoon and json debug purpose*/
     /*get time syc json sucessfully*/
     json_obj->set_location_inf(json_obj, "ecling 123", "00:22:33:44", -100, time(NULL));
     json_obj->set_location_inf(json_obj, "tcling 123", "00:22:33:44", -100, time(NULL));
@@ -115,16 +126,17 @@ int main()
     json_obj->set_health_inf(json_obj, health_temp, "mike", "123444567", time(NULL));
 #if 1
     if(json_obj->get_location_upload_json(json_obj, pbuffer) == 0) {
-        printf("get get_location_upload_json = %s\n", pbuffer);
+        log_printf("get get_location_upload_json = %s\n", pbuffer);
     }
     if(json_obj->get_health_upload_json(json_obj, pbuffer) == 0) {
-        printf("get get_health_upload_json = %s\n", pbuffer);
+        log_printf("get get_health_upload_json = %s\n", pbuffer);
     } else {
-        printf("get health json eror\n");
+        log_printf("get health json eror\n");
     }
 #endif
+#endif
 
-    printf("main thread\r\n");
+    log_printf("main thread\r\n");
     for (int i = 1; i < MAX_COM+1 ; i++) {
         int pipe_fd[4];
         struct private_thread_para *t;
@@ -133,14 +145,11 @@ int main()
             if((t = malloc(sizeof(struct private_thread_para))) == NULL) {
                 return -1;
             }
-            if(i == 1) {
-                serial_pipe_read  =  pipe_fd[0];
-                serial_pipe_write =  pipe_fd[3];
-                //printf("serial_pipe_read id =%d",serial_pipe_read );
-            } else {
-                socket_pipe_read = pipe_fd[0];
-                socket_pipe_write = pipe_fd[3];
-            }
+			
+			fd_record.t[i-1].pipe_read_fd  = pipe_fd[0];
+			fd_record.t[i-1].pipe_write_fd = pipe_fd[3];
+ 			log_printf("pipe created %d times %d %d \n ", i, fd_record.t[i-1].pipe_read_fd, fd_record.t[i-1].pipe_write_fd);
+			/*set fd record structor for child thread*/
             t->pipe_father_thread->pipe_read_fd = pipe_fd[0];
             t->pipe_father_thread->pipe_write_fd = pipe_fd[1]; /*for other thread to write data to its pipe*/
             t->pipe_child_thread->pipe_read_fd = pipe_fd[2];
@@ -148,19 +157,23 @@ int main()
             t->fd_max = (t->pipe_father_thread->pipe_write_fd, t->pipe_child_thread->pipe_read_fd);
         }
         if(pthread_create(&pid[i-1], NULL, pthread_arry[i-1],  t) < 0) {
-            printf("can not create thread_socket\n\r");
+            log_printf("can not create thread_socket\n\r");
         }
         pthread_detach(pid[i-1]);
         t = NULL;
         //pthread_create(&serid[i], NULL, serial_proc, &server_env);
-    }
-
+    } 
 
 #if 1
-    printf("*********serial_pipe_read id =%d**********\n",serial_pipe_read );
+#if 0
+    log_printf("*********fd_record.pipe_fd.serial_pipe.pipe_read_fd id =%d**********\n",fd_record.pipe_fd.serial_pipe.pipe_read_fd );
+    log_printf("*********fd_record.pipe_fd.serial_pipe.pipe_write_fd id =%d**********\n",fd_record.pipe_fd.serial_pipe.pipe_write_fd );
+    log_printf("*********fd_record.pipe_fd.socket_pipe.pipe_read_fd id =%d**********\n",fd_record.pipe_fd.socket_pipe.pipe_read_fd );
+    log_printf("*********fd_record.pipe_fd.socket_pipe.pipe_write_fd id =%d**********\n",fd_record.pipe_fd.socket_pipe.pipe_write_fd );
+#endif
     fd_set inputs;
     FD_ZERO(&inputs);
-    FD_SET(serial_pipe_read, &inputs);
+    FD_SET(fd_record.pipe_fd.serial_pipe.pipe_read_fd, &inputs);
 
     int nread,result;
     char buffer[100];
@@ -174,66 +187,66 @@ int main()
     for(;;) {
         //perror("com select timeout(((((((((\r\n");
         FD_ZERO(&inputs);
-        FD_SET(serial_pipe_read, &inputs);
-        result = select(serial_pipe_read + 1, &inputs, NULL , (fd_set *)NULL, &temp);
+        FD_SET(fd_record.pipe_fd.serial_pipe.pipe_read_fd, &inputs);
+        result = select(fd_record.pipe_fd.serial_pipe.pipe_read_fd + 1, &inputs, NULL , (fd_set *)NULL, &temp);
 #if 1
 
         switch(result) {
         case 0: //time out
  
             FD_ZERO(&inputs);
-            FD_SET(serial_pipe_read, &inputs);
-			FD_SET(serial_pipe_read, &inputs);
+            FD_SET(fd_record.pipe_fd.serial_pipe.pipe_read_fd, &inputs);
+			FD_SET(fd_record.pipe_fd.serial_pipe.pipe_read_fd, &inputs);
             perror("main thread wait timeout\r\n");
 	 		set_timeval(&temp, SERIAL_PIPE_TIMEOUT);
             /*indicate there is location related data existed*/
 #if 1
             if(json_obj->get_location_upload_json(json_obj, location_json_buffer) == 0) {
-                write(socket_pipe_write, location_json_buffer, strlen(location_json_buffer)+1);
+                write(fd_record.pipe_fd.socket_pipe.pipe_write_fd, location_json_buffer, strlen(location_json_buffer)+1);
             }
 #endif
             /*indicate there is location related data existed*/
             if(json_obj->get_health_upload_json(json_obj, health_json_buffer) == 0) {
-                write(socket_pipe_write, health_json_buffer, strlen(health_json_buffer)+1);
+                write(fd_record.pipe_fd.socket_pipe.pipe_write_fd, health_json_buffer, strlen(health_json_buffer)+1);
             }
-            //write(serial_pipe_write, "12345", 5);
+            //write(fd_record.pipe_fd.serial_pipe.pipe_write_fd, "12345", 5);
             break;
         case -1:		 //error
             perror("com select timeout\r\n");
             //return result;
         default:
 #if 1
-            if(FD_ISSET(serial_pipe_read, &inputs)) {
-                ioctl(serial_pipe_read, FIONREAD, &nread);
+            if(FD_ISSET(fd_record.pipe_fd.serial_pipe.pipe_read_fd, &inputs)) {
+                ioctl(fd_record.pipe_fd.serial_pipe.pipe_read_fd, FIONREAD, &nread);
                 if(nread == 0) {
                     continue;
                 }
-                nread = read(serial_pipe_read, buffer, nread);
-                printf("main thread pipe read lenth =%d\n", nread);
+                nread = read(fd_record.pipe_fd.serial_pipe.pipe_read_fd, buffer, nread);
+                log_printf("main thread pipe read lenth =%d\n", nread);
 #if 0
                 for(int i=0; i < nread ; i++) {
-                    //printf("main thread pipe read le\n")
-                    fprintf(stdout,"=%02x", buffer[i]);
+                    //log_printf("main thread pipe read le\n")
+                    log_printf("=%02x", buffer[i]);
                 }
 #endif
                 struct cling_location_rev *pserial_buffer = (struct cling_location_rev *)buffer;
 
                 /*take use of bute packagetype to tell what kind of package it is*/
                 if(pserial_buffer->package_type == (char)CMD_LOCATION_TYPE) {
-                    printf("set location json!!\n");
+                    log_printf("set location json!!\n");
                     int ret = json_obj->set_location_inf(json_obj, pserial_buffer->load.cling_id, pserial_buffer->load.cling_mac, pserial_buffer->load.cling_rssi[0], time(NULL));
                     /*if location queue is full then send it*/
                     if (ret < 0 || ret == 1) {
-                        printf("location queque has been full\n");
+                        log_printf("location queque has been full\n");
                         if(json_obj->get_location_upload_json(json_obj, location_json_buffer) == 0) {
-                            write(socket_pipe_write, location_json_buffer, strlen(location_json_buffer)+1);
+                            write(fd_record.pipe_fd.socket_pipe.pipe_write_fd, location_json_buffer, strlen(location_json_buffer)+1);
                         }
                     } else {
-                        printf("location inf added suceefully\n");
+                        log_printf("location inf added suceefully\n");
                     }
                 } else if(pserial_buffer->package_type == CMD_HEALTH_TYPE) {
 
-                    printf("set health json!!\n");
+                    log_printf("set health json!!\n");
                     struct cling_health_rev *pbuffer_health = (struct cling_health_rev *)buffer;
                     struct health_data_inf a = {0};
                     a.date = pbuffer_health->load.date;
@@ -246,26 +259,22 @@ int main()
                     /*for thsre is no buffer in serial thread so get current timestamp as the time recieved this message*/
                     a.beacon_timestamp = time(NULL);
 
-                    int ret = json_obj->set_health_inf(json_obj,a , "ECIG", pbuffer_health->load.cling_mac, time(NULL));
+                    int ret = json_obj->set_health_inf(json_obj, a, "ECIG", pbuffer_health->load.cling_mac, time(NULL));
                     if (ret < 0 || ret == 1) {
-                        printf("health queque has been full\n");
+                        log_printf("health queque has been full\n");
                         /*indicate there is location related data existed*/
                         if(json_obj->get_health_upload_json(json_obj, health_json_buffer) == 0) {
-                            write(socket_pipe_write, health_json_buffer, strlen(health_json_buffer)+1);
+                            write(fd_record.pipe_fd.socket_pipe.pipe_write_fd, health_json_buffer, strlen(health_json_buffer)+1);
                         }
                     } else {
-                        printf("health inf added suceefully\n");
+                        log_printf("health inf added sucessfully\n");
                     }
 
                 }
 
-                //printf("\n");
-                /*write data to serial thread through pipe*/
-                //write(serial_pipe_write, "12345", 5);
 
             }
-            //buffer[nread] = 0;
-            //printf("%s\r\n", buffer);
+
 #endif
             break;
         }//end of switch
@@ -273,18 +282,18 @@ int main()
 #endif
     }
 #endif
-
+#if 0
 //while(1);
-    printf("main thread serial_pipe_write = %d\n", serial_pipe_write);
+    log_printf("main thread fd_record.pipe_fd.serial_pipe.pipe_write_fd = %d\n", fd_record.pipe_fd.serial_pipe.pipe_write_fd);
     char a[]="01234567891";
     for(;;) {
-        write(socket_pipe_write,pbuffer,strlen(pbuffer)+1);
+        write(fd_record.pipe_fd.socket_pipe.pipe_write_fd,pbuffer,strlen(pbuffer)+1);
         a[0]++;
         sleep(2);
     }
 
     //pthread_join(pid[0], NULL);
     //socket_process(NULL);
+#endif
     pthread_exit(0);
 }
-

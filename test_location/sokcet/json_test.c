@@ -207,7 +207,7 @@ int get_rid_of_quotation(char *pbuffer, int lenth) /*initiate http object*/
         temp[i++] = *s++;
     }
     temp[i] = '\0';
-    //printf("i = %d \t lenth = %d, %s\n",i,lenth, temp);
+    //log_printf("i = %d \t lenth = %d, %s\n",i,lenth, temp);
     strcpy(pbuffer, temp);
 	return 0;
 }
@@ -256,7 +256,7 @@ int set_location_information(CLASS(json_interface) *arg, char *pdev_id, char *pd
         /*one more new member has been added to list*/
         cling_location_inf_data->cling_location_inf_chain_lenth++;
 
-		printf("cling_location_inf_data->cling_location_inf_chain_lenth = %d\n", cling_location_inf_data->cling_location_inf_chain_lenth);
+		log_printf("cling_location_inf_data->cling_location_inf_chain_lenth = %d\n", cling_location_inf_data->cling_location_inf_chain_lenth);
 
 		p->pnext = NULL;
         memcpy((char *)(p->btid), pdev_id, CLING_DEVICE_ID_LENTH);
@@ -341,7 +341,7 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
         struct rtc_time i;
         arg->base_rtc->to_beijing_tm (cling_health_inf_data->timestamp, &i);
         /*merge current year month with  transmitted from ble device*/
-        printf("beijign year =%d , month=%d  date = %d\n",i.tm_year, i.tm_mon,p->health.date);
+        log_printf("beijign year =%d , month=%d  date = %d\n",i.tm_year, i.tm_mon,p->health.date);
         p->health.ble_timestamp = arg->base_rtc->make_beijing_time (i.tm_year, i.tm_mon, p->health.date, 0, 0, 0);
         json_object_object_add(health_json_detail, "T",  json_object_new_int(p->health.ble_timestamp));
         json_object_object_add(health_json_detail, "D",  json_object_new_int(p->health.total_distance));
@@ -366,7 +366,7 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
 
     }
 
-    printf("cling_health_inf_data->cling_health_inf_chain_lenth =%d\n", cling_health_inf_data->cling_health_inf_chain_lenth);
+    log_printf("cling_health_inf_data->cling_health_inf_chain_lenth =%d\n", cling_health_inf_data->cling_health_inf_chain_lenth);
     char mac[60];
     char version[60];
     BEACON_GET_VERSION(version);
@@ -398,13 +398,13 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
                     uint16_t checksum = 0;
                     value = health_data_array;
                     char *s = (char*)json_object_to_json_string(value);
-                    printf("health json_object_to_json_string = %s\n", s);
+                    log_printf("health json_object_to_json_string = %s\n", s);
                     //*(s + strlen(s) - 1) = 0;
-                    //printf("json_object_to_json_string(value)= %s\n",s+1);
+                    //log_printf("json_object_to_json_string(value)= %s\n",s+1);
                     arg->sha1_interface->check_sum(arg->sha1_interface, s, strlen(s), &checksum);
                     //arg->sha1_interface->check_sum(arg->sha1_interface, TEST_STRING, strlen(TEST_STRING), &checksum);
-                    printf("check sum value = %u\n", checksum);
-                    /*printf check sum value and random number to the end of string*/
+                    log_printf("check sum value = %u\n", checksum);
+                    /*log_printf check sum value and random number to the end of string*/
                     sprintf(enpryption_text + strlen(enpryption_text), "%d%d", checksum, CLING_SCAN_DATA_RANDOMNUM);
                 }
             }
@@ -417,7 +417,7 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
 #define  TEST_MIKE "v1.0.2t45772(a)18:fe:34:a6:e7:4825282184591436782865&blue="
     memcpy(enpryption_text, TEST_MIKE, strlen(TEST_MIKE)+1);
 #endif
-    printf("health+++  = %s\n", enpryption_text);
+    log_printf("health+++  = %s\n", enpryption_text);
     /*start process of sha1 enpryption*/
     char sha1_output[100], sha1_encode64[100];
     int  sha1_output_lenth, sha1_encode64_lenth;
@@ -426,17 +426,17 @@ static int get_health_upload_json(CLASS(json_interface) *arg, char *pbuffer) /*i
     arg->sha1_interface->base64_encode(arg->sha1_interface, sha1_output, sha1_output_lenth, sha1_encode64, 100);
     sha1_output[sha1_output_lenth + 1] = 0;
 
-    printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
-    printf("code64 = %s\n", sha1_encode64);
+    log_printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
+    log_printf("code64 = %s\n", sha1_encode64);
     /*accomplishment the signature key value*/
     json_object_object_add(health_json_body, "signature",  json_object_new_string(sha1_encode64));
 
     //sprintf(pbuffer, "%s", json_object_to_json_string(time_req_object));
-    //printf("my_object.to_string()=%s\n", pbuffer);
+    //log_printf("my_object.to_string()=%s\n", pbuffer);
     sprintf(pbuffer, "%s", json_object_to_json_string(health_json_body));
     /*free memory occupid by json lib*/
     while ((json_object_put(health_json_body) != 1) ||	(json_object_put(health_data_array) != 1)) {
-        printf("health_json_body json object freed failed\n");
+        log_printf("health_json_body json object freed failed\n");
     }
 #endif
 
@@ -500,7 +500,7 @@ static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer) /
         /*release location occupied memory*/
         free(s);
     }
-    printf("cling_health_inf_data->cling_health_inf_chain_lenth =%d\n", cling_location_inf_data->cling_location_inf_chain_lenth);
+    log_printf("cling_health_inf_data->cling_health_inf_chain_lenth =%d\n", cling_location_inf_data->cling_location_inf_chain_lenth);
 
     char mac[60],version[60];
     //char pbuffer[1024];
@@ -546,9 +546,9 @@ static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer) /
                 if(json_object_object_get_ex(loacation_json_body, "request_body", &value) ==  TRUE) {
                     char *s =LOCATION_REQUEST_BODY;//json_object_to_json_string(value);
                     uint16_t check_sum = 0;
-                    printf("location json_object_to_json_string(value)= %s\n",s);
+                    log_printf("location json_object_to_json_string(value)= %s\n",s);
                     arg->sha1_interface->check_sum(arg->sha1_interface, s, strlen(s), &check_sum);
-                    /*printf check sum value and random number to the end of string*/
+                    /*log_printf check sum value and random number to the end of string*/
                     sprintf(enpryption_text + strlen(enpryption_text), "%d%d", check_sum, CLING_SCAN_DATA_RANDOMNUM);
                 }
             }
@@ -557,7 +557,7 @@ static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer) /
     /*add blue mark to the end of th string*/
     // strcat(enpryption_text + strlen(enpryption_text), "&blue=");
     get_rid_of_quotation(enpryption_text, strlen(enpryption_text));
-    printf("location enpryption_text = %s\n\n", enpryption_text);
+    log_printf("location enpryption_text = %s\n\n", enpryption_text);
     /*start process of sha1 enpryption*/
     char sha1_output[100], sha1_encode64[100];
     int  sha1_output_lenth, sha1_encode64_lenth;
@@ -566,19 +566,19 @@ static int get_location_upload_json(CLASS(json_interface) *arg, char *pbuffer) /
     arg->sha1_interface->base64_encode(arg->sha1_interface, sha1_output, sha1_output_lenth, sha1_encode64, 100);
     sha1_output[sha1_output_lenth + 1] = 0;
 
-    printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
-    printf("code64 = %s\n", sha1_encode64);
+    log_printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
+    log_printf("code64 = %s\n", sha1_encode64);
     /*accomplishment the signature key value*/
     json_object_object_add(loacation_json_body, "signature",  json_object_new_string(sha1_encode64));
 
 //sprintf(pbuffer, "%s", json_object_to_json_string(time_req_object));
-//printf("my_object.to_string()=%s\n", pbuffer);
+//log_printf("my_object.to_string()=%s\n", pbuffer);
     /*transfer josn to string for better sendding*/
     sprintf(pbuffer, "%s", json_object_to_json_string(loacation_json_body));
-    printf("location json =%s\n enpryption text= %s\n", json_object_to_json_string(loacation_json_body), enpryption_text);
+    log_printf("location json =%s\n enpryption text= %s\n", json_object_to_json_string(loacation_json_body), enpryption_text);
     /*free memory occupid by json lib*/
     while (json_object_put(loacation_json_body) != 1) {
-        printf("loacation_json_body json object freed failed\n");
+        log_printf("loacation_json_body json object freed failed\n");
     }
 
 #endif
@@ -620,11 +620,11 @@ int get_time_request_json(CLASS(json_interface) *arg, char *pbuffer)   /*initiat
     json_object_object_add(time_req_object, "signature",  NULL);
     json_object_object_add(time_req_object, "request_body", json_object_new_string("{\"action\":\"time\"}"));
 
-    printf("my_object.to_string()=%s \n", json_object_to_json_string(time_req_object));
+    log_printf("my_object.to_string()=%s \n", json_object_to_json_string(time_req_object));
     /*add coressponed key calue to encryption text */
     for(int i = 0 ; i < sizeof(encryption_sequnece)/sizeof(encryption_sequnece[0]); i++ ) {
         struct json_object *value;
-        printf("%s", encryption_sequnece[i]);
+        log_printf("%s", encryption_sequnece[i]);
         /*if get find the key successfully*/
         if(json_object_object_get_ex(time_req_object, encryption_sequnece[i], &value) ==  TRUE) {
             strcat(pbuffer, json_object_to_json_string(value));
@@ -643,9 +643,9 @@ int get_time_request_json(CLASS(json_interface) *arg, char *pbuffer)   /*initiat
     }
 #endif
 #endif
-    printf("encryption text= %s\n", pbuffer);
+    log_printf("encryption text= %s\n", pbuffer);
     get_rid_of_quotation(pbuffer, strlen(pbuffer));
-    printf("encryption text= %s\n", pbuffer);
+    log_printf("encryption text= %s\n", pbuffer);
 
     char sha1_output[100], sha1_encode64[100];
     int  sha1_output_lenth, sha1_encode64_lenth;
@@ -654,16 +654,16 @@ int get_time_request_json(CLASS(json_interface) *arg, char *pbuffer)   /*initiat
     arg->sha1_interface->base64_encode(arg->sha1_interface, sha1_output, sha1_output_lenth, sha1_encode64, 100);
     sha1_output[sha1_output_lenth + 1] = 0;
 
-    printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
-    printf("code64 = %s\n", sha1_encode64);
+    log_printf("text = %s lenth =%d\n", sha1_output, sha1_output_lenth);
+    log_printf("code64 = %s\n", sha1_encode64);
     /*accomplishment the signature key value*/
     json_object_object_add(time_req_object, "signature",  json_object_new_string(sha1_encode64));
     sprintf(pbuffer, "%s", json_object_to_json_string(time_req_object));
-    printf("my_object.to_string()=%s\n", pbuffer);
+    log_printf("my_object.to_string()=%s\n", pbuffer);
 
     /*free tim esyc json memory*/
     while (json_object_put(time_req_object) != 1) {
-        printf("time_req_object freed succesfully\n");
+        log_printf("time_req_object freed succesfully\n");
     }
 
     return 0;

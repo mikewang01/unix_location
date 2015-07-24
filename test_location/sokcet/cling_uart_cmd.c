@@ -15,6 +15,7 @@
 #include <unistd.h> 
 
 
+
 /*********************************************************************
 * MACROS
 */
@@ -273,12 +274,12 @@ int  cling_data_mac_pocess(void * buffer, int lenth)
 
 	
     if (lenth > 0) {
-        printf("uart cmd layer recieved%d\n", lenth);
+        log_printf("uart cmd layer recieved%d\n", lenth);
         if (lenth == sizeof(inf_l.load)) {
-            printf("location recieved%d\n", lenth);
+            log_printf("location recieved%d\n", lenth);
 			inf_l.package_type = CMD_LOCATION_TYPE;
 			(inf_l.load) = *((struct location_data*) buffer);
-			printf("location data lenth = %d\n", sizeof(inf_l.load));				
+			log_printf("location data lenth = %d\n", sizeof(inf_l.load));				
             /*post cling device information from ble device to task registered*/
 			if(cmd_layer_revcallback != NULL){
 				cmd_layer_revcallback((char*)&inf_l, sizeof(inf_l));
@@ -296,14 +297,14 @@ int  cling_data_mac_pocess(void * buffer, int lenth)
 
         } else if (lenth == sizeof(inf_h.load)) {
 			
-			printf("health data lenth = %d\n", sizeof(inf_h.load));
+			log_printf("health data lenth = %d\n", sizeof(inf_h.load));
 			inf_h.package_type = CMD_HEALTH_TYPE;
             //CLING_DEBUG("cling_health_rev recieved\n");
             (inf_h.load) =  *((struct health_data*)buffer);
             /*post cling device information from ble device to task registered*/
 #if 0
             if (ipc_fd > 0) {
-				printf("IPC SENDED!!!!!!\n");
+				log_printf("IPC SENDED!!!!!!\n");
                 /*buffer gonna be freed in user task*/
 				IPC_SEND(&inf_h, sizeof(inf_h));
 

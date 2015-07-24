@@ -59,7 +59,7 @@ static struct private_thread_para *serial_para;
 int cling_uart_ipc_fd_register(unsigned int  fd);
 void cmd_process_callback(char cmd){
 	if(cmd == 0x02){
-		printf("time sync request recevied\n");
+		log_printf("time sync request recevied\n");
 		uint32_t time_stamp = time(NULL);
 		cling_u_data_send((char*)(&time_stamp), sizeof(time_stamp));
 	}
@@ -87,7 +87,7 @@ int serial_write_callback(char *pbuffer, unsigned int lenth){
 	 }
 	
 	if(write(serial_para->fd, pbuffer, lenth) < 0);{
-		printf("serial write error numbeer =%d\n",errno);
+		log_printf("serial write error numbeer =%d\n",errno);
 	}
 
 	/*restore serial flag*/
@@ -126,19 +126,21 @@ void *serial_thread(void *arg)
 	set_recieved_cmd_call_back(cmd_process_callback);
 	unsigned char buffer[100];
 	
-	printf("serial_thread running\r\n");
+	log_printf("serial_thread running\r\n");
 	serial_timeout.tv_sec = SERIAL_SELECT_TIMEOUT/1000;
 	serial_timeout.tv_usec = (SERIAL_SELECT_TIMEOUT%1000)*1000;
 
-	if((fd = serial_init(0)) < 0) {
+	while((fd = serial_init(0)) < 0) {
+		/*if there is no ttys device existed then keep checking*/
         perror("serial init failed\r\n");
+		sleep(2);
     }
 	/*aobtian thread id*/
 	serial_para->fd = fd;
 	/*find the max descriptor*/
 	serial_para->fd_max = MAX(serial_para->fd, serial_para->fd_max);
-	printf("serial_thread id = %d\r\n", serial_para->fd);
-	printf("serial_parent write id = %d\r\n", serial_para->pipe_father_thread[0].pipe_write_fd);
+	log_printf("serial_thread id = %d\r\n", serial_para->fd);
+	log_printf("serial_parent write id = %d\r\n", serial_para->pipe_father_thread[0].pipe_write_fd);
 
 	FD_ZERO(&inputs);
     FD_SET(serial_para->fd, &inputs);
@@ -162,12 +164,12 @@ void *serial_thread(void *arg)
 			FD_SET(serial_para->pipe_child_thread->pipe_read_fd, &inputs);
         	serial_timeout.tv_sec = SERIAL_SELECT_TIMEOUT/1000;
 			serial_timeout.tv_usec = (SERIAL_SELECT_TIMEOUT%1000)*1000;
-			//printf("mac_sendlist_mantain_demon\r\n");
+			//log_printf("mac_sendlist_mantain_demon\r\n");
 	 		mac_sendlist_mantain_demon();
         	//perror("serial select timeout\r\n");
 			break;
         case -1:		 //error
-        	printf("serial thread exit -1\n");
+        	log_printf("serial thread exit -1\n");
             exit(result);
 			break;
         default:
@@ -182,16 +184,16 @@ void *serial_thread(void *arg)
 					receive_one_char_callback(buffer[i]);
 				}
 				//buffer[nread] = 0;
-				//printf("%s\r\n", buffer);
+				//log_printf("%s\r\n", buffer);
             }else if(FD_ISSET(serial_para->pipe_child_thread->pipe_read_fd, &inputs)){
             	/*this meeans serial buffer is writravke*/
 				nread = read(serial_para->pipe_child_thread->pipe_read_fd, buffer, sizeof(buffer));
 				buffer[nread] = 0;
-				printf("%s\r\n", buffer);
-				printf("serial data recieved\r\n");
+				log_printf("%s\r\n", buffer);
+				log_printf("serial data recieved\r\n");
 	 			cling_u_data_send(buffer, nread);
 			}else {
-				printf("serial thread exit -2\n");
+				log_printf("serial thread exit -2\n");
                 exit(-1);
             }
 			break;

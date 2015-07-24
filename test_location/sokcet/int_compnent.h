@@ -11,6 +11,7 @@
 #ifndef __INT_COMPONENT_H__
 #define __INT_COMPONENT_H__
 #include "oop_hal.h"
+#include "user_interface.h"
 
 DEF_CLASS(int_comp)
 	int (*init)    		(CLASS(int_comp)*); /*initiate http object*/

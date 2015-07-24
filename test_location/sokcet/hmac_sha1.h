@@ -4,6 +4,7 @@
 
 #include "oop_hal.h"
 #include <stdint.h>
+#include "user_interface.h"
 
 
 

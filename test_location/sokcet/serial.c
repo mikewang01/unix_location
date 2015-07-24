@@ -361,14 +361,14 @@ void serial_test()
         perror("serial init failed\r\n");
     }
 
-	printf("serial fd = %d \r\n", fd);
+	log_printf("serial fd = %d \r\n", fd);
     while(1) {
-        printf("serial\r\n");
+        log_printf("serial\r\n");
         if ((ret = write_serial_port(fd,TEST_STRING, sizeof(TEST_STRING))) < 0) {
-            printf("com error\r\n");
+            log_printf("com error\r\n");
         } else {
             sleep(1);
-            printf("number data = %d\r\n", ret);
+            log_printf("number data = %d\r\n", ret);
         }
 
     }
@@ -416,11 +416,11 @@ void *serial_thread(void *arg)
                 }
                 nread = read(fd, buffer, sizeof(buffer));
 				buffer[nread] = 0;
-				printf("%s", buffer);
+				log_printf("%s", buffer);
             }else if(FD_ISSET(fd,&outputs)){/*this meeans serial buffer is writravke*/
-				printf("serial writable\r\n");
+				log_printf("serial writable\r\n");
 				if ((write_serial_port(fd,TEST_STRING, sizeof(TEST_STRING))) < 0) {
-            		printf("com write error\r\n");
+            		log_printf("com write error\r\n");
         		}
 			}else {
                 assert(-1);

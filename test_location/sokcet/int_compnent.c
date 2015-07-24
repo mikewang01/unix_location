@@ -67,20 +67,20 @@ int get_mac(CLASS(int_comp) *arg, char *buffer, unsigned int *output_lenth) /*in
         perror("ioctl error"),exit(1);
     addr = (struct sockaddr_in *)&(ifr.ifr_addr);
     address = inet_ntoa(addr->sin_addr);
-    printf("inet addr: %s ",address);
+    log_printf("inet addr: %s ",address);
 
     if(ioctl(sockfd,SIOCGIFBRDADDR,&ifr) == -1)
         perror("ioctl error"),exit(1);
     addr = (struct sockaddr_in *)&ifr.ifr_broadaddr;
     address = inet_ntoa(addr->sin_addr);
-    printf("broad addr: %s ",address);
+    log_printf("broad addr: %s ",address);
 
     if(ioctl(sockfd,SIOCGIFNETMASK,&ifr) == -1)
         perror("ioctl error"),exit(1);
     addr = (struct sockaddr_in *)&ifr.ifr_addr;
     address = inet_ntoa(addr->sin_addr);
-    printf("inet mask: %s ",address);
-    printf("\n");
+    log_printf("inet mask: %s ",address);
+    log_printf("\n");
 #endif
     if(ioctl(sockfd, SIOCGIFHWADDR, &ifr) == -1){
         perror("ioctl error");
@@ -88,7 +88,7 @@ int get_mac(CLASS(int_comp) *arg, char *buffer, unsigned int *output_lenth) /*in
     }
     unsigned char * mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
 	sprintf(buffer,"%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5], mac[6]);
-	printf("mac adress = %s\n", buffer);	
+	log_printf("mac adress = %s\n", buffer);	
 	close(sockfd);
     return 0;
 }
@@ -117,12 +117,12 @@ int get_ip(CLASS(int_comp) *arg, char *buffer, unsigned int *output_lenth) /*ini
         perror("ioctl error"),exit(1);
     addr = (struct sockaddr_in *)&(ifr.ifr_addr);
     address = inet_ntoa(addr->sin_addr);
-    printf("inet addr: %s ",address);
+    log_printf("inet addr: %s ",address);
 
     unsigned char * mac = (unsigned char *)ifr.ifr_hwaddr.sa_data;
     for(i=0; i<6; i++)
-        printf("%02x:",mac[i]);
-    printf("\n");
+        log_printf("%02x:",mac[i]);
+    log_printf("\n");
 	close(sockfd);
     return 0;
 

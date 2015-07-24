@@ -29,6 +29,7 @@
 __BEGIN_DECLS
 
 #define ACCT_COMM 16
+#define ACCT_COMM 16
 
 /*
   comp_t is a 16-bit "floating" point number with a 3-bit base 8

@@ -107,7 +107,7 @@ int HmacEncode(const char * algo,
 		/*
 		ifoutput buffer is less than lowest threahold
 		if(sizeof(output) < EVP_MAX_MD_SIZE){
-			printf("sizeof(output) < EVP_MAX_MD_SIZE\n");
+			log_printf("sizeof(output) < EVP_MAX_MD_SIZE\n");
 			return -1;
 		}*/
         if(strcasecmp("sha512", algo) == 0) {
@@ -135,7 +135,7 @@ int HmacEncode(const char * algo,
                // engine = EVP_md2();
         }
         else {
-				printf("Algorithm %s is not supported by this program!", algo);
+				log_printf("Algorithm %s is not supported by this program!", algo);
     
                 return -1;
         }
@@ -254,7 +254,7 @@ static int check_sum(CLASS(hmac_sha1) *arg, unsigned char *addr, int count, uint
         sum = (sum & 0xffff) + (sum >> 16);
     checksum = ~sum;
 #endif
-	printf("internal checksum =%u\n", (uint16_t)(checksum&0xffff));
+	log_printf("internal checksum =%u\n", (uint16_t)(checksum&0xffff));
 	(*pchecksum) = (uint16_t)(checksum&0xffff);
     return 0;
 }
@@ -379,7 +379,7 @@ hmac_sha1_base64_decode(CLASS(hmac_sha1) *arg, char *src, char *dst)
         else if(*s=='=') *temp=-1;
         else
         {
-            printf("\n%c:Not a valid base64 string\n",*s);
+            log_printf("\n%c:Not a valid base64 string\n",*s);
             return -1;
         }
         ++s;
@@ -410,7 +410,7 @@ hmac_sha1_base64_decode(CLASS(hmac_sha1) *arg, char *src, char *dst)
     }
     else 
     {
-        printf("Not a valid base64 string\n");
+        log_printf("Not a valid base64 string\n");
         return -1;
     }
     *p=0;
@@ -454,7 +454,7 @@ hmac_sha1_base64_encode(CLASS(hmac_sha1) *arg, const char *str, int str_len, cha
     BIO_flush(b64);
     BIO_get_mem_ptr(b64,&bptr);
     if(bptr->length>encode_len){
-        printf("encode_len too small\n");
+        log_printf("encode_len too small\n");
         return -1; 
     }   
     encode_len=bptr->length;

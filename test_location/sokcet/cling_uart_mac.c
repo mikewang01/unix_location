@@ -41,7 +41,7 @@
 #define  MAC_SEND_BUFFER(__X, __Y) do{\
 	if(reg_serial_fd > 0){\
 		if(write(reg_serial_fd, __X,__Y) < 0);\
-			printf("serial write error numbeer =%d\n",errno);\
+			log_printf("serial write error numbeer =%d\n",errno);\
 	}\
 }while(0)
 #endif
@@ -131,9 +131,9 @@ void receive_one_char_callback(unsigned char rev_char)
 {
 
 	RcvMsgBuff *para = &serial_buff;
-	//printf("\r\ndata=");
+	//log_printf("\r\ndata=");
 	
-	  //printf(":%02x",rev_char);
+	  //log_printf(":%02x",rev_char);
 #if 0
     MAC_SEND_BUFFER(&rev_char, 1);
 #endif
@@ -285,7 +285,7 @@ void received_data_process(RcvMsgBuff *para)
     /*this means this is a ack package*/
     if (para->pRcvMsgBuff[0] == PACKAGE_ACK) {
         macsend_ack_recieved();
-		printf("ack recieved\n");
+		log_printf("ack recieved\n");
     } else if (para->pRcvMsgBuff[0] == PACKAGE_DATA) {
         /*add messge to reveived messge list waiting for processing*/
         add_payload2revlist(para->pRcvMsgBuff + 1, (para->pWritePos - para->pRcvMsgBuff - 1));
@@ -314,15 +314,15 @@ int	cling_data_mac_pocess(void * buffer, int lenth);
 static int add_payload2revlist(unsigned char *pbuffer, int size)
 {
 
-	//printf("add_payload2revlist\n");
+	//log_printf("add_payload2revlist\n");
     /*if this lock is occupied by other process then return*/
     if (IS_SEMAPHORE_LOCKED(rev_fifo_semphore)) {
         return -1;
     }
 #if 0
-	printf("\r\ndata=");
+	log_printf("\r\ndata=");
 	for(int i =0;i< size ;i++){
-	  printf(":%02x",pbuffer[i]);
+	  log_printf(":%02x",pbuffer[i]);
 	}
 #endif
 
@@ -399,7 +399,7 @@ FAILED:
 int mac_send_payload(char *ppayload, int lenth)
 {
 
-	//printf("==============ble fota============%d\n", lenth);
+	//log_printf("==============ble fota============%d\n", lenth);
     /*if this lock is occupied by other process then return*/
     if (IS_SEMAPHORE_LOCKED(send_fifo_semphore)) {
         return -1;
@@ -497,7 +497,7 @@ int mac_sendlist_mantain_demon()
                 payload_temp->resend_times ++;
             } else {
 
-				printf("send time up\n");
+				log_printf("send time up\n");
                 /*remove the packege sended successfully*/
                 send_package_list_header = send_package_list_header->next;
                 /*free payload buffer*/
